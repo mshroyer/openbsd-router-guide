@@ -1,0 +1,12 @@
+if_tun = "{ tun0 tun2 }"
+if_tap = "tun1"
+# So that we can use urpf-failed rule even with the OpenVPN bridge
+set skip on $if_tap
+
+### Tun interfaces ###
+
+## Ingress
+pass in on $if_tun
+
+## Egress
+pass out on $if_tun

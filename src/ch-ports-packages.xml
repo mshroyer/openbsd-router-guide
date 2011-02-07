@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-ports-packages"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>Ports and Packages</title>
+
+  <para>Subsequent sections of this guide will entail installing various
+  bits of third-party software in order to augment the router's
+  functionality.  Much of this software will be available through the
+  OpenBSD Ports Collection and package repositories.</para>
+
+  <para>This section describes how to configure your system to install
+  software from both the OpenBSD binary package repositories and the ports
+  tree.  Readers already familiar with OpenBSD system administration may
+  wish to skip over this section.</para>
+
+  <section xml:id="sec-packages">
+    <title>OpenBSD packages</title>
+
+    <para>OpenBSD packages are bundles of pre-compiled third party
+    software.  There are made available on OpenBSD FTP and HTTP mirrors,
+    organized by OpenBSD version and machine architecture.  For i386
+    machines like the ALIX, the relevant mirror directory is
+    <filename>/pub/OpenBSD/&obsdVer;/packages/i386/</filename>.</para>
+
+    <para>To use a package repository, set the environment variable
+    <code>PKG_PATH</code> to a URL pointing to your favorite repository.  A
+    full list of repository mirrors can be found here:</para>
+
+    <para><link xlink:href="http://www.openbsd.org/ftp.html">http://www.openbsd.org/ftp.html</link></para>
+
+    <para>You'll probably want to put this in your shell's startup script,
+    so this gets set automatically when you log in:</para>
+
+<programlisting>
+# PKG_PATH="ftp://ftp3.usa.openbsd.org/pub/OpenBSD/&obsdVer;/packages/i386/"
+# export PKG_PATH
+</programlisting>
+
+    <para>Now you can use the <command>pkg_add(1)</command> command to add
+    new packages to your system from the mirror, e.g.:</para>
+
+<screen width="80">
+# pkg_add -r pftop
+</screen>
+
+    <para>A list of all currently installed packages can be obtained with
+    the <command>pkg_info(1)</command> command.  Note that this list will
+    include software installed from the ports tree, as well: when you build
+    and install a port, you are actually creating a package which is then
+    installed on your system; see <xref linkend="sec-ports" /> for details.
+    This has the nice result that you can upgrade an application that was
+    installed from the ports tree to a newer version from a package
+    repository, or vice-versa.</para>
+
+    <para>Refer to the <command>packages(7)</command> man page for more
+    information about installing, updating, and removing OpenBSD
+    package.</para>
+  </section>
+
+  <section xml:id="sec-ports">
+    <title>OpenBSD ports</title>
+
+    <para>The OpenBSD Ports Collection provides an easy, uniform way to
+    configure, build, and install third-party open source applications on
+    your OpenBSD system.  Each "port" consists of a directory with (among
+    other things) any operating system-specific patches for the
+    application, and a Makefile whose default target will automatically
+    download the software's source code, verify the download against known
+    checksums, apply the patches, and the compile the software into a
+    binary package – after recursively doing the same for any missing
+    prerequisites.  The compiled binary package can then be installed by
+    running <command>make install</command> in the port directory.</para>
+
+    <para>Ports are organized in a directory hierarchy called the "ports
+    tree."  A copy of this tree must be installed on your system in order
+    to build ports.</para>
+
+    <section xml:id="sec-ports-installing">
+      <title>Installing the Ports Collection</title>
+
+      <para>Like the rest of the OpenBSD project, the OpenBSD Ports tree is
+      maintained in a public CVS repository.  It can be obtained and
+      updated via CVS checkouts, or by downloading tarballs of CVS
+      snapshots from an FTP or HTTP mirror.  However, the former option is
+      terribly slow, and the latter doesn't lend itself well to keeping
+      your copy of the tree up-to-date.</para>
+
+      <para>Instead we can use <link
+      xlink:href="http://www.cvsup.org/">CVSup</link> protocol to quickly
+      check out and update the entire Ports tree from any of the public
+      OpenBSD CVSup servers, which are listed here:</para>
+
+      <para><link xlink:href="http://www.openbsd.org/cvsup.html#CVSROOT">http://www.openbsd.org/cvsup.html#CVSROOT</link></para>
+
+      <para>First you'll need the <command>cvsup(1)</command> program,
+      which is not included in the OpenBSD base system.  It is available as
+      a binary package, however:</para>
+
+<screen width="80">
+# pkg_add -r cvsup-16.1hp2-no_x11
+</screen>
+
+      <para>Next, create a file <filename>/etc/cvsup-file-ports</filename>
+      with the following configuration, substituting any <link
+      xlink:href="http://www.openbsd.org/cvsup.html#CVSROOT">CVSup
+      mirror</link> of your choice for
+      <code>cvsup.no.openbsd.org</code>:</para>
+
+      <programlisting><xi:include href="files/etc/cvsup-file-ports" parse="text" /></programlisting>
+
+      <para>Now you can use <command>cvsup(1)</command> to fetch and
+      install the tree:</para>
+
+<screen width="80">
+# cvsup -g -L 2 /etc/cvsup-file-ports
+</screen>
+
+      <para>Downloading the entire tree will take a while, but subsequent
+      updates (performed using the same command as shown above) will be
+      quick.</para>
+    </section>
+
+    <section xml:id="sec-ports-using">
+      <title>Using ports</title>
+
+      <para>In most cases, to install software from the Ports tree you need
+      only change to its directory under <filename>/usr/ports</filename>
+      and <command>make install</command> it.  For example, supposing that
+      you want to install Bash, you would perform the following:</para>
+
+<screen width="80"><![CDATA[
+# cd /usr/ports/shells/bash
+# make && make install
+]]></screen>
+
+      <para>And the software will be automatically downloaded, patched,
+      configured, compiled, and then installed into the
+      <filename>/usr/local</filename> hierarchy.  This overview barely
+      scratches the surface of the Ports Collection's capabilities,
+      however; for more information, including how to specify custom Port
+      build options, refer to the <command>ports(7)</command> man
+      page.</para>
+    </section>
+  </section>
+
+  <section xml:id="sec-ports-packages-caveats">
+    <title>Some caveats</title>
+
+    <para>While OpenBSD's package repositories and Ports tree are extremely
+    useful, there are some shortcomings to be aware of when using
+    them:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis>The package repositories do not contain all the
+        software and all the possible combinations of build options to be
+        found in the Ports Collection.</emphasis> Also, the package
+        repositories may not be as up-to-date as the latest checkout of the
+        Ports tree.</para>
+      </listitem>
+      <listitem>
+        <para><emphasis>Software in the package repositories is not
+        cryptographically signed.</emphasis> In addition to the
+        trustworthiness of the third-party software itself, you must also
+        consider the security of the package mirror
+        itself.<footnote><para>This is not merely a theoretical risk.  In
+        August 2007, five of the core Ubuntu Linux FTP mirrors had to be
+        taken offline when they were found to have been compromised.
+        Ubuntu users were never in any danger from this, however, because
+        the packages in Ubuntu's apt repositories are cryptographically
+        signed.</para></footnote></para>
+      </listitem>
+      <listitem>
+        <para><emphasis>Likewise, the Ports tree mirrors are not
+        signed.</emphasis> However, MD5 and SHA1 hashes of ports' source
+        distributions are included in the Ports tree, so assuming you have
+        a genuine copy of the Ports tree there is little risk of installing
+        compromised third-party packages.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+</chapter>

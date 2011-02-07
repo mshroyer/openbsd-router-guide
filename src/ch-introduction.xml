@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-introduction"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>Introduction</title>
+
+  <section xml:id="sec-purpose">
+    <title>Purpose and target audience</title>
+
+    <para>This document is a start-to-end guide to setting up a <link
+    xlink:href="http://www.pcengines.ch/alix2d3.htm">PC Engines GmbH
+    ALIX.2D3</link> system board as an OpenBSD &obsdVer;-based NAT gateway,
+    providing a small LAN with a PF NAT/firewall, recursive DNS service,
+    Network Time Protocol synchronization, and more.</para>
+
+    <para>First and foremost, I'm writing this for my own future reference.
+    Therefore I will assume of the reader some experience with Unix
+    (although not necessarily OpenBSD) system administration, as well as a
+    general understanding of TCP/IP and IPv6 networking.</para>
+
+    <para>But I do hope this guide will also prove useful to others out
+    there, which is why I'm bothering to publish it at all.  Even though it
+    necessarily addresses some particulars of my installation, I have tried
+    to keep it as general as possible.</para>
+  </section>
+
+  <section xml:id="sec-why-openbsd">
+    <title>Why OpenBSD?</title>
+
+    <para>Why build a router on OpenBSD, rather than more popular open
+    source source operating systems such as Debian Linux?  It ultimately
+    comes down to personal tastes – both Linux and the BSDs are solid
+    systems – but these are the specific advantages that draw me to OpenBSD
+    for this application:
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Like the other BSDs, OpenBSD's development model is as a
+        single, cohesive operating system rather than the collection of
+        disparate parts that makes up most Linux distributions.  In my
+        experience this makes for a smoother system administration
+        experience: all the man pages are kept relevant and up to date, and
+        system utilities make sense in the context of the system as a
+        whole.</para>
+      </listitem>
+      <listitem>
+        <para>There is a strong emphasis on security and code correctness
+        in the OpenBSD community, making the system uniquely suited for a
+        router with constant exposure to a hostile Internet.</para>
+      </listitem>
+      <listitem>
+        <para>The OpenBSD base system includes great networking software
+        like the <command>pf(4)</command> firewall,
+        <command>altq(9)</command> queue management, the
+        <command>pppoe(4)</command> kernel driver,
+        <command>dhcpd(8)</command>, and <command>named(8)</command>.
+        Widely used software like OpenSSH and OpenNTPD actually originates
+        with the OpenBSD project, and so is perhaps better integrated into
+        OpenBSD than in any other operating system.</para>
+      </listitem>
+      <listitem>
+        <para>OpenBSD is very light on system resources, with lower memory
+        use than Debian Linux.  This is good for limited memory systems
+        like the ALIX board.</para>
+      </listitem>
+      <listitem>
+        <para>The ports tree offers easier customization of third-party
+        software than the binary package mechanisms in most Linux
+        distributions.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id="sec-intro-installation-type">
+    <title>OpenBSD installation type</title>
+
+    <para>The end product of this guide is a full, general-purpose OpenBSD
+    installation on the ALIX board's Compact Flash card.  Specifically,
+    this is in contrast to a read-only, image-based OpenBSD installation
+    such as offered by <link
+    xlink:href="http://www.nmedia.net/flashdist/">flashdist</link> or <link
+    xlink:href="http://www.nmedia.net/flashrd/">flashrd</link>.</para>
+
+    <para>In researching this topic, I've found some people have an almost
+    visceral repulsion toward the use of read-write filesystems on CF cards
+    in embedded devices.  While such hesitation tends to be based on the
+    kernel of truth that flash memory can endure a limited number of write
+    cycles, I would point out that modern flash memory can handle hundreds
+    of thousands or millions of erasures of the same block before failure,
+    and that's before taking write leveling into account.  If you take some
+    basic precautions such as disabling swap and setting
+    <code>noatime</code> in <filename>fstab</filename>, flash write wear
+    just isn't something you'll have to worry about in practice on such a
+    device.<footnote><para>Now, I should point out I'm not dissing flashrd
+    here – it's a great project, and something like flashrd will be well
+    worth it if you need maximum unattended reliability (for the sake of
+    random filesystem corruption in the face of power failure as much as
+    flash wear), or if you're deploying multiple systems and would find
+    yourself creating system images anyway.  But I feel that for a single
+    hobbyist home router such as the one described in this document, the
+    simplicity and flexibility of a stock OpenBSD installation is the
+    overriding concern.</para></footnote></para>
+
+    <para>For what it's worth, I've been running this configuration on
+    the same CF card for more than two years now, and I'm yet to encounter
+    flash memory failure.</para>
+  </section>
+
+  <section xml:id="sec-prerequisites">
+    <title>Prerequisites</title>
+
+    <para>If you want to follow along with these instructions, you will
+    need to have a few things before you begin:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>A PPPoE-based DSL Internet connection (with DSL modem
+        already set up)
+        </para>
+      </listitem>
+      <listitem>
+        <para>ALIX.2D3 board with power supply and, optionally, enclosure</para>
+      </listitem>
+      <listitem>
+        <para>16 GB Compact Flash card<footnote><para>While any 4 GB or
+        larger Compact Flash card should easily suffice (and much smaller
+        can be managed, depending on how much effort you are willing to
+        expend paring down the OpenBSD operating system, and the exact
+        nature of your requirements), the disk partition scheme described
+        in this document assumes the user of 16 GB
+        media.</para></footnote></para>
+      </listitem>
+      <listitem>
+        <para>Two Ethernet (Cat 5e or Cat 6 with 8P8C connectors) cables</para>
+      </listitem>
+      <listitem>
+        <para>RS-232 null modem cable (female-female)</para>
+      </listitem>
+      <listitem>
+        <para>A PC workstation with: an RS-232 serial port (or a
+        USB-to-serial adapter), an Ethernet adapter, and a second network
+        adapter of any type which routes to the Internet</para>
+      </listitem>
+    </itemizedlist>
+
+
+    <para>Additionally, if your ALIX.2D3 board does not already include a
+    battery backup for its CMOS clock (a custom build option for this
+    board, also known as the <link
+    xlink:href="http://www.pcengines.ch/alix2d13.htm">ALIX.2D13</link>) and
+    you wish to add one, you will need the following:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>One CR2032 battery</para>
+      </listitem>
+      <listitem>
+        <para>Soldering supplies and equipment: iron, solder, sponge, etc.</para>
+      </listitem>
+      <listitem>
+        <para>CR2032 battery holder with 20.4mm lead spacing<footnote>
+        <para>For instance, Renata CR2032FH1 or Panasonic BR2032-1HE, as
+        per the ALIX.2D3 documentation.</para></footnote>
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Installation of the CR2032 battery holder will be covered in <xref linkend="ch-alix-board-setup" />.</para>
+  </section>
+
+  <section xml:id="sec-intro-conventions">
+    <title>Conventions used in this document</title>
+
+    <para>Certain file listings and instructions in this guide necessarily
+    refer to specifics such as hostname or private (RFC 1918) IPv4
+    addresses.  Wherever you see these, substitute values appropriate for
+    your own setup for those shown in <xref linkend="tab-specifics"
+    />.</para>
+
+    <table xml:id="tab-specifics" frame="all">
+      <title>Installation specifics</title>
+      <tgroup cols="2" align="left" colsep="1" rowsep="1">
+        <thead>
+          <row>
+            <entry>Setting</entry>
+            <entry>Value</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>Router hostname</entry>
+            <entry>midgard.example.net</entry>
+          </row>
+          <row>
+            <entry>Unix username</entry>
+            <entry>mshroyer</entry>
+          </row>
+          <row>
+            <entry>Router IPv4 address on LAN</entry>
+            <entry>10.19.0.1</entry>
+          </row>
+          <row>
+            <entry>LAN IPv4 network block</entry>
+            <entry>10.19.0.0/17</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>Throughout this document, OpenBSD commands and system components
+    are referred to by name, followed in parentheses by the section number
+    in the OpenBSD manual in which their documentation lives.  For example,
+    the classic Unix text editor would be shown as
+    <command>vi(1)</command>.</para>
+    
+  </section>
+</chapter>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE book [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<book xml:id="manual"
+      xmlns="http://docbook.org/ns/docbook"
+      version="5.0"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xml:lang="en">
+  <info>
+    <title>Midgard Configuration Manual</title>
+    <subtitle>Turning a PC Engines ALIX.2D3 into an OpenBSD &obsdVer; home router</subtitle>
+    <author>
+      <personname>
+        <firstname>Mark</firstname><surname>Shroyer</surname>
+      </personname>
+      <uri type="homepage">http://markshroyer.com/</uri>
+      <email>code@markshroyer.com</email>
+    </author>
+    <copyright><year>2011</year><holder>Mark Shroyer</holder></copyright>
+  </info>
+
+  <xi:include href="ch-introduction.xml" />
+  <xi:include href="ch-alix-board-setup.xml" />
+  <xi:include href="ch-openbsd-installation.xml" />
+  <xi:include href="ch-basic-configuration.xml" />
+  <xi:include href="ch-security-updates.xml" />
+  <xi:include href="ch-ports-packages.xml" />
+  <xi:include href="ch-gateway.xml" />
+  <xi:include href="ap-license.xml" />
+</book>

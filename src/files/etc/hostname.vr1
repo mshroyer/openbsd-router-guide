@@ -1,0 +1,2 @@
+inet 10.19.0.1 255.255.128.0 10.19.127.255
+description "example.net LAN"

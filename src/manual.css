@@ -1,0 +1,7 @@
+pre.programlisting, pre.screen {
+    background-color: #eee;
+    padding: 1em;
+}
+pre.programlisting {
+    border-left: 2px solid #aaa;
+}

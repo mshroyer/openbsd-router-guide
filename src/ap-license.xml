@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<appendix xml:id="ap-license"
+          xmlns="http://docbook.org/ns/docbook"
+          version="5.0"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xml:lang="en">
+  <title>Copyright Notice and License</title>
+
+  <para>This document is copyright © 2011 Mark Shroyer.</para>
+
+  <para>You are free to use, distribute, and modify this document pursuant
+  to the terms of the Creative Commons Attribution 3.0 license.  Broadly
+  speaking, this means that you are allowed to copy, distribute, and
+  display this document, and to make derivative works from it – as long as
+  you retain this copyright notice and prominently attribute the document,
+  or my contribution to your derivative work, to me (but not in any way
+  that suggests that I endorse you or your use of the document).  It also
+  means that I accept no liability for any outcome arising from your use of
+  this document.  To learn exactly what your rights, obligations, and
+  limitations are under this license, refer to:</para>
+
+  <para><link xlink:href="http://creativecommons.org/licenses/by/3.0/us/">http://creativecommons.org/licenses/by/3.0/us/</link></para>
+
+  <para>Please note that this license statement does not presume to
+  restrict your rights arising from the fair use doctrine or other
+  limitations on the exclusive rights of a copyright owner, under copyright
+  or other applicable laws.</para>
+</appendix>

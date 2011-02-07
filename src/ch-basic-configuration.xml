@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-basic-configuration"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>Basic System Configuration</title>
+
+  <section xml:id="sec-regular-user">
+    <title>Adding a regular user</title>
+
+    <para>Logging in as root is fine for doing quick configuration work on
+    the console, but it's a good idea to have a non-superuser account for
+    other purposes, or for logging in with Secure Shell (as will be
+    described in <xref linkend="sec-config-sshd" />).</para>
+
+    <para>Type the command <userinput>adduser</userinput> on the shell and
+    follow the prompts to interactively configure a new user account.  Be
+    sure to change the user's login class to "staff", and add the new user
+    to the wheel group when prompted for additional group memberships.
+    Next, uncomment the line in <filename>/etc/sudoers</filename> (using
+    <command>visudo(8)</command>) which provides all members of wheel with
+    <command>sudo(8)</command> privileges:</para>
+
+<programlisting>
+%wheel  ALL=(ALL) SETENV: ALL
+</programlisting>
+  </section>
+
+  <section xml:id="sec-email-delivery">
+    <title>Email delivery for system notifications</title>
+
+    <para>In BSD it is customary for the system maintenance
+    <command>cron(8)</command> jobs to email the root user account with
+    regular status reports or notifications of certain conditions.  If you
+    will primarily be logging into the system with the non-superuser
+    account created in <xref linkend="sec-regular-user"/>, it would
+    therefore be convenient to have root's email forwarded to this
+    account.</para>
+
+    <para>To achieve this, create a file
+    <filename>/root/.forward</filename> like the following, substituting
+    your own username for "mshroyer":</para>
+
+<programlisting>
+\mshroyer
+</programlisting>
+  </section>
+
+  <section xml:id="sec-network-interfaces">
+    <title>Network interfaces</title>
+
+    <section xml:id="sec-network-interfaces-internet">
+      <title>Internet interface configuration</title>
+
+      <para>With OpenBSD up and running on the ALIX board, it is time to
+      set up basic Internet connectivity by establishing a PPPoE connection
+      with our DSL provider.  OpenBSD provides two means of establishing
+      this connection: there is the highly-configurable
+      <command>pppoe(8)</command> userland daemon, and the less flexible
+      but lower-overhead <command>pppoe(4)</command> kernel driver.
+      Features offered by <command>pppoe(8)</command> – but lacking in the
+      kernel driver – include automatically adding PPPoE-specified DNS
+      servers to <filename>/etc/resolv.conf</filename> and mangling the MSS
+      of TCP packets to accommodate the PPPoE MTU bottleneck.  However, we
+      will be running our own DNS server on this device (making the servers
+      specified by the PPPoE server irrelevant) and PF can perform the
+      necessary MSS mangling on its own, so in our case it will be simpler
+      to use the kernel PPPoE driver.</para>
+
+      <para>First, select an Ethernet interface to serve as the router's
+      PPPoE interface to the DSL modem.  You will not need to assign an IP
+      address to this interface, but it will need to be brought "up" by
+      <command>ifconfig(8)</command>.  Supposing that you will use the
+      interface vr0 for this purpose, create a configuration file
+      <filename>/etc/hostname.vr0</filename> with the following single
+      line:</para>
+
+      <programlisting><xi:include href="files/etc/hostname.vr0" parse="text" /></programlisting>
+
+      <para>Next, create a PPPoE configuration file
+      <filename>/etc/hostname.pppoe0</filename>, which will contain the
+      settings necessary to connect to your DSL provider.  Enter something
+      like the following, replacing the strings <code>YOUR_USERNAME</code>
+      and <code>YOUR_PASSWORD</code> with your actual PPPoE authentication
+      tokens for your ISP:</para>
+
+      <programlisting><xi:include href="files/etc/hostname.pppoe0" parse="text" /></programlisting>
+    </section>
+
+    <section xml:id="sec-network-interfaces-lan">
+      <title>LAN interface configuration</title>
+
+      <para>Since our consumer DSL Internet connection only affords us one
+      public IPv4 address, we will of course be putting our LAN behind a
+      NAT, on a private (RFC 1918) network block.  Setting up packet
+      forwarding and the NAT will be covered in a following section; but
+      first, let us bring up the router's LAN interface.</para>
+
+      <para>Assuming you will be using the ALIX's vr1 interface to connect
+      to the LAN, create the interface configuration file
+      <filename>/etc/hostname.vr1</filename> with the following
+      contents:</para>
+
+      <programlisting><xi:include href="files/etc/hostname.vr1" parse="text" /></programlisting>
+    </section>
+
+    <section xml:id="sec-network-hostnames">
+      <title>Hostnames</title>
+
+      <para>Enter the full system hostname as a single line in the file
+      <filename>/etc/myname</filename>:</para>
+
+      <programlisting><xi:include href="files/etc/myname" parse="text" /></programlisting>
+
+      <para>Also, place lines like the following in
+      <filename>/etc/hosts</filename> so that the system can resolve its
+      own hostname without relying upon DNS:</para>
+
+      <programlisting><xi:include href="files/etc/hosts" parse="text" /></programlisting>
+    </section>
+
+    <section xml:id="set-network-bringing-online">
+      <title>Bringing it all online</title>
+
+      <para>Now that your configuration files are in place, run OpenBSD's
+      <command>netstart</command>script to put them into effect:</para>
+
+<screen width="80">
+# sh /etc/netstart
+</screen>
+      
+      <para>After the script has run, use the
+      <command>ifconfig(8)</command> command to verify that all configured
+      interfaces are up, and that the interface pppoe0 has authenticated
+      and acquired an IP address from your DSL provider.</para>
+    </section>
+  </section>
+
+  <section xml:id="sec-config-sshd">
+    <title>Secure Shell daemon</title>
+
+    <para>In <xref linkend="sec-openbsd-installer-basic" /> we specified
+    that the Secure Shell daemon should run at boot time.  However, there
+    are some optimizations that we can make to the daemon's configuration
+    which should increase our system's overall security, for instance
+    preventing root logins and accepting only public key authentication.
+    Implement these changes by merging the following configurations into
+    <filename>/etc/ssh/sshd_config</filename>:</para>
+
+<programlisting>
+PermitRootLogin no
+AllowUsers mshroyer
+StrictModes yes
+RSAAuthentication no
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+</programlisting>
+
+    <para>Make sure that <filename>~/.ssh/authorized_keys</filename>
+    contains the public keys for the keypair(s) you intend to use to log
+    into the router, so that you will still be able to log in once password
+    authentication has been disabled, then send the Secure Shell daemon the
+    SIGHUP signal to force it to reload its configuration file:</para>
+
+<screen width="80">
+# kill -HUP `cat /var/run/sshd.pid`
+</screen>
+  </section>
+
+  <section xml:id="sec-ntpd">
+    <title>Network Time Protocol daemon</title>
+
+    <para>OpenNTPD allows us to keep the system clock synchronized with
+    accurate Internet time servers across the world, and to provide similar
+    time service to the local network as well.  During the system
+    installation we configured the NTP daemon to run at boot; now we need
+    only specify which servers it should query for the time, and which
+    other machines it should offer service to.  Edit the file
+    <filename>/etc/ntpd.conf</filename> as follows:</para>
+
+    <programlisting><xi:include href="files/etc/ntpd.conf" parse="text" /></programlisting>
+
+    <para>By allowing the daemon to listen on all network interfaces, you
+    are making it available to the entire Internet.  In theory this
+    represents a potential security vulnerability, but OpenNTPD is cleanly
+    implemented and runs with minimal permissions, so the potential for
+    exploit is probably negligible.  And by configuring this so, you will
+    be able to keep any laptops synchronized with your home NTP server
+    while you are away.</para>
+
+    <para>Kill and restart <command>ntpd(8)</command> to load the new
+    configuration.</para>
+  </section>
+</chapter>
+

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-security-updates"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>Getting Security Updates</title>
+
+  <section xml:id="sec-openbsd-source">
+    <title>OpenBSD source code</title>
+
+    <para>OpenBSD's core system updates, including any security updates,
+    are distributed as patches to the source code distribution.  Before you
+    can install any security updates, therefore, you will need to install a
+    copy of the system source code tree.  Download the files
+    <filename>src.tar.gz</filename> and <filename>sys.tar.gz</filename>
+    from the OpenBSD &obsdVer; directory on your nearest mirror, then
+    extract these files into the <filename>/usr/src</filename> tree:</para>
+
+<screen width="80">
+# tar -C /usr/src -xzf src.tar.gz
+# tar -C /usr/src -xzf sys.tar.gz
+</screen>
+
+    <para>Note that if you are using the official OpenBSD &obsdVer; CD set,
+    there is no <filename>sys.tar.gz</filename>; on the CD, both these
+    parts of the system source code are contained in the single file
+    <filename>src.tar.gz</filename>.</para>
+  </section>
+
+  <section xml:id="sec-release-errata">
+    <title>Release errata</title>
+
+    <para>The current list of errata for OpenBSD &obsdVer; is available on
+    the Web at:</para>
+
+    <para><link xlink:href="http://www.openbsd.org/errata&obsdMajorVer;&obsdMinorVer;.html">http://www.openbsd.org/errata&obsdMajorVer;&obsdMinorVer;.html</link></para>
+
+    <para>Browse through this list and determine which patches are
+    applicable to your hardware architecture and installation options.
+    Follow the instructions provided in each patch to rebuild and install
+    individual system components, then restart the patched software or the
+    entire system as needed.</para>
+  </section>
+
+  <section xml:id="sec-rebuilding-kernel">
+    <title>Rebuilding the kernel</title>
+
+    <para>The solutions to some OpenBSD errata may call on you to rebuild
+    the system's kernel.  If so, apply the patch as indicated, then rebuild
+    your kernel as follows:</para>
+
+<screen width="80"><![CDATA[
+# cd /usr/src/sys/arch/i386/conf
+# /usr/sbin/config GENERIC
+# cd ../compile/GENERIC
+# make clean && make depend && make
+]]></screen>
+
+    <para>Finally, back up your old kernel and install the new one:</para>
+
+<screen width="80">
+# cp -p /bsd /bsd.old
+# make install
+</screen>
+
+    <para>Reboot the computer to load the new kernel.  You can verify the
+    kernel's updated build date by examining the output of
+    <command>dmesg(8)</command>.</para>
+  </section>
+</chapter>

@@ -1,0 +1,16 @@
+# Defaults that apply to all the collections
+*default release=cvs
+*default delete use-rel-suffix
+*default umask=001
+*default host=cvsup.no.openbsd.org
+*default base=/usr
+*default prefix=/usr
+*default tag=OPENBSD_4_8
+*default compress
+
+OpenBSD-ports
+#OpenBSD-all
+#OpenBSD-src
+#OpenBSD-www
+#OpenBSD-x11
+#OpenBSD-xenocara

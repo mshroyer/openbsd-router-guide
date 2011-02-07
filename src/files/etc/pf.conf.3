@@ -1,0 +1,8 @@
+### Abstract service / application port definitions ###
+srv_tcp_im = "{ 1863 5190 5220 5222 5223 }"
+srv_tcp_http = "{ 80 8080 8888 }"
+srv_tcp_mail = "{ 21 25 110 587 995 }"
+
+altq on $if_wan bandwidth 280000b hfsc (linkshare 280000b upperlimit 280000b) queue { upstream }
+queue upstream bandwidth 99% priority 0 qlimit 10 hfsc (default)
+

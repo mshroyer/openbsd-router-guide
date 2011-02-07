@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-gateway"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>Internet Gateway</title>
+
+  <section xml:id="sec-gateway-packet-forwarding">
+    <title>Sysctl and packet forwarding</title>
+
+    <para>Before you can set up your OpenBSD box as any kind of router, you
+    will need to enable IPv4 packet forwarding in the kernel through the
+    <command>sysctl(3)</command> mechanism.  For added security, and
+    because you generally will not need this feature anyway, you should
+    also disable ICMP redirects.  Issue these commands as root:</para>
+
+<screen width="80">
+# sysctl -w net.inet.ip.forwarding=1
+# sysctl -w net.inet.ip.redirect=0
+</screen>
+
+    <para>Also, append the lines</para>
+
+<programlisting>
+net.inet.ip.forwarding=1
+net.inet.ip.redirect=0
+</programlisting>
+
+    <para>to the file <filename>/etc/sysctl.conf</filename> in order to
+    make this configuration persistent across reboots.</para>
+  </section>
+
+  <section xml:id="sec-gateway-firewall">
+    <title>Firewall</title>
+
+    <para>Next comes the lengthy task of configuring
+    <command>pf(4)</command>, the OpenBSD Packet Filter.  The firewall is
+    configured using the file <filename>/etc/pf.conf</filename>, which is
+    divided into several sections pertaining to macro definitions, address
+    translation, traffic normalization and queueing, packet filtering, and
+    so forth.</para>
+
+    <section xml:id="sec-gateway-pf.conf">
+      <title>pf.conf</title>
+
+      <para>Configure PF by editing <filename>/etc/pf.conf</filename> as
+      follows:</para>
+
+      <programlisting><xi:include href="files/etc/pf.conf.1" parse="text" /></programlisting>
+
+      <para>Now start the firewall:</para>
+
+<screen width="80">
+# pfctl -f /etc/pf.conf
+# pfctl -e
+</screen>
+
+      <para>Then, so that the packet filter will start automatically at
+      boot time, add the following line to
+      <filename>/etc/rc.conf.local</filename>.</para>
+
+<programlisting>
+pf=YES
+</programlisting>
+    </section>
+
+    <section xml:id="sec-gateway-ftp-proxy">
+      <title>ftp-proxy</title>
+
+      <para>Due to <link
+      xlink:href="http://slacksite.com/other/ftp.html">the goofy way</link>
+      in which the old FTP protocol establishes its data connections,
+      special provisions must be made in firewalls like ours in order to
+      support active-mode FTP connections from LAN clients to servers in
+      the outside world.  In OpenBSD, these provisions take the form of the
+      <command>ftp-proxy(8)</command> daemon.</para>
+
+      <para>The proxy works by intercepting outbound FTP control
+      connections, modifying key FTP commands as necessary, and adding
+      special, temporary firewall rules to allow the inbound active-mode
+      data connection.  This is provided for by the anchor and FTP
+      redirection rules we've already added to
+      <filename>pf.conf</filename>, as shown above.</para>
+
+      <para>Now we need only run the proxy.  Run the following command to
+      start (and daemonize) it:</para>
+
+<screen width="80">
+# ftp-proxy
+</screen>
+
+      <para>We'll also want <command>ftp-proxy(8)</command> to run
+      automatically when the system boots, so append the following to
+      <filename>/etc/rc.conf.local</filename>:</para>
+
+<programlisting>
+ftpproxy_flags=""
+</programlisting>
+    </section>
+
+  </section>
+
+  <section xml:id="sec-gateway-dhcpd">
+    <title>DHCP daemon</title>
+
+    <para>OpenBSD &obsdVer; includes a modified version of the ISC DHCP
+    server, which we will use to provide network configurations to IPv4
+    hosts on our local network.</para>
+
+    <section xml:id="sec-gateway-dhcpd.conf">
+      <title>dhcpd.conf</title>
+
+      <para>First, provide something analogous to the following
+      configuration in the file <filename>/etc/dhcpd.conf</filename>,
+      starting with the general network configuration:</para>
+
+      <programlisting><xi:include href="files/etc/dhcpd.conf" parse="text" /></programlisting>
+
+      <para>One of the goals of this project was to set up my own recursive
+      domain name server to handle DNS requests on behalf of the LAN, so
+      the DHCP option <code>domain-name-servers</code> has here been
+      configured to return the gateway's own private IP address as the
+      primary name server.</para>
+
+      <para>Append to <filename>dhcpd.conf</filename> any static DHCP
+      allocations you would like to make, using the following template –
+      substituting the actual desired hostnames, IP addresses, and MAC
+      addresses:</para>
+
+<programlisting>
+group {
+    host noatun {
+        hardware ethernet XX:XX:XX:XX:XX:XX;
+        fixed-address 10.19.1.1;
+    }
+    host loki {
+        hardware ethernet XX:XX:XX:XX:XX:XX;
+        fixed-address 10.19.1.2;
+    }
+}
+</programlisting>
+
+      <para>Here we're using the 10.19.1/24 block for static DHCP
+      allocations, and 10.19.2/24 for dynamic DHCP clients.</para>
+    </section>
+
+    <section xml:id="sec-gateway-dhcpd-starting">
+      <title>Starting the daemon</title>
+
+      <para>Add the following line to
+      <filename>/etc/rc.conf.local</filename> so that the DHCP daemon will
+      start at boot, listening on the LAN interface.</para>
+
+<programlisting>
+dhcpd_flags="vr1"
+</programlisting>
+
+      <para>Then, start the daemon manually by running:</para>
+
+<screen width="80">
+# /usr/sbin/dhcpd vr1
+</screen>
+    </section>
+  </section>
+
+  <section xml:id="sec-gateway-bind">
+    <title>BIND</title>
+
+    <para>OpenBSD &obsdVer; also includes a version of ISC BIND 9, the
+    Internet's de facto standard DNS server.  Running a caching BIND server
+    on your gateway can greatly reduce the latency experienced while
+    browsing the Web, by minimizing DNS request round-trip time.  This is
+    especially noticeable if your ISP's DNS servers are underpowered and
+    over-utilized.</para>
+
+    <para>Also, having your own server protects you from DNS abuse at the
+    hands of your ISP, such as Cox Communications' "Enhanced Error Results
+    Page," which breaks expected DNS behavior so that Cox can make a few
+    extra bucks advertising to typo-prone customers.</para>
+
+    <section xml:id="sec-gateway-named.conf">
+      <title>named.conf</title>
+
+      <para>BIND's main configuration file is located at
+      <filename>/var/named/etc/named.conf</filename>.  Edit this file with
+      a configuration like the following:</para>
+
+      <programlisting><xi:include href="files/var/named/etc/named.conf" parse="text" /></programlisting>
+    </section>
+
+    <section xml:id="sec-gateway-zone-master">
+      <title>Zone master files</title>
+
+      <para>Next create the files in the
+      <filename>/var/named/master</filename> directory which were
+      referenced above.  A detailed discussion of the zone file format is
+      beyond the scope of this guide; refer to Cricket Liu &amp; Paul
+      Albitz's <citetitle pubwork="book">DNS and BIND</citetitle> if you
+      really want to get into the details.  However, the following examples
+      should suffice as templates for most use cases, starting with
+      <filename>db.net.example:</filename></para>
+
+<programlisting>
+$ORIGIN example.net.
+$TTL 3h ; 3 hours
+@ IN SOA midgard.example.net. root.example.net. (
+                        120     ; serial
+                        3h      ; refresh (3 hours)
+                        1h      ; retry (1 hour)
+                        1w      ; expire (1 week)
+                        1h      ; minimum (1 hour)
+                        )
+
+                        NS      midgard.example.net.
+
+$TTL 5m ; 5 minutes
+
+                        A       X.X.X.X ; Replace with your public IPv4 address
+
+$TTL 3h ; 3 hours
+
+ntp                     CNAME   example.net.
+
+midgard                 A       10.19.0.1
+ap                      A       10.19.0.2
+
+noatun                  A       10.19.1.1
+loki                    A       10.19.1.2
+</programlisting>
+
+      <para>The <code>$ORIGIN</code> keyword allows you to specify a base
+      name for all hostnames in this file, so you can say, e.g.,
+      <code>noatun</code> rather than <code>noatun.example.net.</code> when
+      specifying that computer's A record.</para>
+
+      <para>Next up, reverse DNS for your network's address block, in the
+      file <filename>db.10.19</filename>:</para>
+
+<programlisting>
+$ORIGIN 19.10.in-addr.arpa.
+$TTL 3h
+
+@ IN SOA midgard.example.net. root.example.net. (
+        120     ; serial
+        3h      ; refresh
+        1h      ; retry
+        1w      ; expire
+        1h      ; negative caching TTL
+        )
+
+                NS      midgard.example.net.
+
+1.0             PTR     midgard.example.net.
+2.0             PTR     ap.example.net.
+
+1.1             PTR     noatun.example.net.
+2.1             PTR     loki.example.net.
+</programlisting>
+
+      <para>The configuration file in <xref
+      linkend="sec-gateway-named.conf" /> specified that dynamic updates
+      should be allowed for the domain.  In order for this to work, the
+      name server itself must be allowed to write to the zone master files'
+      directory.  Give the name server's system account ownership of this
+      directory:</para>
+
+<screen width="80">
+# chown -R named /var/named/master
+</screen>
+    </section>
+
+    <section xml:id="sec-gateway-bind-starting">
+      <title>Starting BIND</title>
+
+      <para>Start the BIND domain name server by simply running the command
+      <command>named</command> as root.  Watch for any error messages which
+      may indicate a syntax error in the zone files or in the BIND
+      configuration file.  If the daemon starts successfully, add the
+      following line to <filename>/etc/rc.conf.local</filename> so that
+      <command>named(8)</command> will run automatically on subsequent
+      reboots:</para>
+
+<programlisting>
+named_flags=""
+</programlisting>
+    </section>
+  </section>
+</chapter>

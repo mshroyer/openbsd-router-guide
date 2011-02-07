@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-alix-board-setup"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>ALIX Board Setup</title>
+
+  <section xml:id="sec-booting-connecting">
+    <title>Booting and connecting</title>
+
+    <para>The first thing to do with your ALIX board is to boot it up and
+    hook it up to it with a serial terminal.  Connect your workstation's
+    serial port (or, as in my case, USB-to-serial adapter) to the board's
+    port with an FF null modem cable.  The default serial port settings
+    used by the ALIX.2D3's BIOS are 38400 baud with eight data bits, one
+    stop bit, no parity, and XON/XOFF flow control; provide these settings
+    to <command>cu(1)</command> or your other serial communications program
+    of choice, then connect, e.g.:</para>
+
+<screen width="80">
+$ cu -e -o -s 38400 -l /dev/ttyUSB0
+</screen>
+
+    <para>Now plug in the ALIX's power supply.  You should immediately
+    see BIOS messages appear on your serial terminal, followed by a
+    memory test, and finally an error message about an invalid disk.  So
+    good, so far.</para>
+  </section>
+
+  <section xml:id="sec-bios-configuration">
+    <title>BIOS configuration</title>
+
+    <para>Reboot the ALIX board with your serial terminal still connected.
+    This time press <keycap>s</keycap> during the BIOS memory check in
+    order to enter the tinyBIOS configuration utility.  Press the number
+    <keycap>1</keycap> to change the BIOS's serial console rate to 115200
+    baud (in order to make serial file transfers bearable, if necessary),
+    <keycap>L</keycap> to enable LBA mode on the CF card, and then
+    <keycap>U</keycap> to enable Ultra DMA.  Also press <keycap>E</keycap>
+    to enable PXE booting.  Finally, press <keycap>Q</keycap> to quit.
+    When prompted, confirm that you wish to persist these changes to
+    flash.</para>
+
+    <para>Disconnect your serial terminal, then reconfigure your terminal
+    software to communicate with the ALIX board at the new rate of 115200
+    baud.  Reconnect your null modem cable and ensure that everything is
+    still working.</para>
+  </section>
+
+  <section xml:id="sec-clock-battery">
+    <title>CMOS clock battery</title>
+
+    <para>Unless ordered with a special build option, the ALIX.2D3 board
+    lacks a backup battery (such as those found in most general-purpose
+    PCs) to keep its CMOS clock running while the board is disconnected
+    from its power supply.  Fortunately, the board comes ready for one to
+    be installed; just solder a standard CR2032 horizontal battery holder
+    into the spot on the circuit board marked "BT1," being sure to observe
+    correct polarity.  Install a fresh battery in the holder and you will
+    be good to go.</para>
+  </section>
+</chapter>
