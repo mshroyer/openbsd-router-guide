@@ -8,7 +8,8 @@ XML = manual.xml \
 	ch-security-updates.xml \
 	ch-ports-packages.xml \
 	ch-gateway.xml \
-	ap-license.xml
+	ap-license.xml \
+	ap-todo.xml
 
 XMLSRC = $(XML:%=src/%)
 

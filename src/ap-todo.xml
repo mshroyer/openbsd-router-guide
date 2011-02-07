@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<appendix xml:id="ch-todo"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>TODO</title>
+
+  <para>Still to be covered in this guide:</para>
+
+  <itemizedlist>
+    <listitem>
+      <para>Beating bufferbloat with <command>altq(9)</command></para>
+    </listitem>
+    <listitem>
+      <para>OpenVPN access</para>
+    </listitem>
+    <listitem>
+      <para>IPv6 tunnel</para>
+    </listitem>
+  </itemizedlist>
+</appendix>

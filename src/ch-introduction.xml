@@ -208,7 +208,7 @@
             <entry>10.19.0.1</entry>
           </row>
           <row>
-            <entry>LAN IPv4 network block</entry>
+            <entry>Private IPv4 network block</entry>
             <entry>10.19.0.0/17</entry>
           </row>
         </tbody>
