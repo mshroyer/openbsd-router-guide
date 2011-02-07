@@ -22,6 +22,7 @@ xhtml-single : xhtml-single/manual.html
 xhtml/index.html : $(XMLSRC) src/manual.css
 	$(XSLTPROC) --xinclude -o xhtml/ xsl/xhtml-chunk.xsl src/manual.xml
 	cp -f src/manual.css xhtml/
+	cp -prf src/images xhtml/images
 
 xhtml-single/manual.html : $(XMLSRC)
 	$(XSLTPROC) --xinclude -o xhtml-single/manual.html xsl/xhtml-single.xsl src/manual.xml
@@ -30,4 +31,4 @@ files :
 	perl getfiles.pl
 
 clean :
-	rm -f xhtml/*
+	rm -rf xhtml/*

@@ -12,14 +12,14 @@
   <info>
     <title>Midgard Configuration Manual</title>
     <subtitle>Turning a PC Engines ALIX.2D3 into an OpenBSD &obsdVer; home router</subtitle>
-    <author>
+    <!-- author>
       <personname>
         <firstname>Mark</firstname><surname>Shroyer</surname>
       </personname>
       <uri type="homepage">http://markshroyer.com/</uri>
-      <email>code@markshroyer.com</email>
-    </author>
+    </author -->
     <copyright><year>2011</year><holder>Mark Shroyer</holder></copyright>
+    <date>February 2011</date>
   </info>
 
   <xi:include href="ch-introduction.xml" />

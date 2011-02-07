@@ -20,6 +20,15 @@
     providing a small LAN with a PF NAT/firewall, recursive DNS service,
     Network Time Protocol synchronization, and more.</para>
 
+    <figure xml:id="fig-alix">
+      <title>An ALIX as an OpenBSD router</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/alix-enclosed.jpg" format="jpg" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+
     <para>First and foremost, I'm writing this for my own future reference.
     Therefore I will assume of the reader some experience with Unix
     (although not necessarily OpenBSD) system administration, as well as a
