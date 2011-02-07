@@ -25,8 +25,8 @@
     (although not necessarily OpenBSD) system administration, as well as a
     general understanding of TCP/IP and IPv6 networking.</para>
 
-    <para>But I do hope this guide will also prove useful to others out
-    there, which is why I'm bothering to publish it at all.  Even though it
+    <para>But I also want this guide to be useful to others out there,
+    which is why I'm bothering to publish it at all.  Even though it
     necessarily addresses some particulars of my installation, I have tried
     to keep it as general as possible.</para>
   </section>
@@ -36,9 +36,9 @@
 
     <para>Why build a router on OpenBSD, rather than more popular open
     source source operating systems such as Debian Linux?  It ultimately
-    comes down to personal tastes – both Linux and the BSDs are solid
-    systems – but these are the specific advantages that draw me to OpenBSD
-    for this application:
+    comes down to personal tastes – Linux as well as any of the other BSDs
+    are plenty capable of getting this job done – but these are the
+    specific advantages that led me to choose OpenBSD for this application:
     </para>
 
     <itemizedlist>
@@ -53,14 +53,14 @@
       </listitem>
       <listitem>
         <para>There is a strong emphasis on security and code correctness
-        in the OpenBSD community, making the system uniquely suited for a
-        router with constant exposure to a hostile Internet.</para>
+        in the OpenBSD community, making the system uniquely suited for use
+        on a router with constant exposure to a hostile Internet.</para>
       </listitem>
       <listitem>
-        <para>The OpenBSD base system includes great networking software
-        like the <command>pf(4)</command> firewall,
-        <command>altq(9)</command> queue management, the
-        <command>pppoe(4)</command> kernel driver,
+        <para>OpenBSD is especially focused on networking.  The base system
+        includes great networking software like the
+        <command>pf(4)</command> firewall, <command>altq(9)</command> queue
+        management, the <command>pppoe(4)</command> kernel driver,
         <command>dhcpd(8)</command>, and <command>named(8)</command>.
         Widely used software like OpenSSH and OpenNTPD actually originates
         with the OpenBSD project, and so is perhaps better integrated into
@@ -99,15 +99,15 @@
     basic precautions such as disabling swap and setting
     <code>noatime</code> in <filename>fstab</filename>, flash write wear
     just isn't something you'll have to worry about in practice on such a
-    device.<footnote><para>Now, I should point out I'm not dissing flashrd
-    here – it's a great project, and something like flashrd will be well
-    worth it if you need maximum unattended reliability (for the sake of
-    random filesystem corruption in the face of power failure as much as
-    flash wear), or if you're deploying multiple systems and would find
-    yourself creating system images anyway.  But I feel that for a single
-    hobbyist home router such as the one described in this document, the
-    simplicity and flexibility of a stock OpenBSD installation is the
-    overriding concern.</para></footnote></para>
+    device.<footnote><para>I should point out I'm not dissing flashrd here
+    – it's a great project, and something like flashrd will be well worth
+    it if you need maximum unattended reliability (for the sake of random
+    filesystem corruption in the face of power failure as much as flash
+    wear), or if you're deploying multiple systems and would find yourself
+    creating system images anyway.  But I feel that for a single hobbyist
+    home router such as the one described in this document, the simplicity
+    and flexibility of a stock OpenBSD installation is the overriding
+    concern.</para></footnote></para>
 
     <para>For what it's worth, I've been running this configuration on
     the same CF card for more than two years now, and I'm yet to encounter

@@ -8,11 +8,15 @@ if_wan = "pppoe0"
 if_lan = "vr1"
 
 ### Subnets and address ranges ###
-net = "10.19.0.0/16"
-net_lo = "127.0.0.0/8"
-net_lan = "10.19.0.0/17"
-net_lan_phys = "10.19.0.0/20"
-multicast = "224.0.0.0/4"
+# IPv4 loopback
+net_lo      = "127.0.0.0/8"
+# IPv4 multicast
+multicast   = "224.0.0.0/4"
+# All the private addresses that fall under our purview
+net_private = "10.19.0.0/16"
+# LAN subnet (as opposed to other subnets under our control, such as VPN
+# subnets)
+net_lan     = "10.19.0.0/17"
 
 ### Port-based access control ###
 # Allowed TCP ports from Internet (ssh treated separately, below)
@@ -64,7 +68,7 @@ match on $if_wan scrub (reassemble tcp random-id max-mss 1440)
 ###############
 
 # NAT
-match out on $if_wan from $net to !(if_wan) nat-to ($if_wan)
+match out on $if_wan from $net_private to !(if_wan) nat-to ($if_wan)
 
 
 ####################
