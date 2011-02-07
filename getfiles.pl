@@ -27,6 +27,7 @@ use constant FILES => (
                        '/etc/pf.conf',
                        '/etc/dhcpd.conf',
                        '/var/named/etc/named.conf',
+                       '/etc/fstab',
                       );
 
 ### END CONFIGURATION #####################################################

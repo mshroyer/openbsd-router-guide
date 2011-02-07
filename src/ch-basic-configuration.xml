@@ -32,6 +32,19 @@
 </programlisting>
   </section>
 
+  <section xml:id="sec-config-fstab">
+    <title>fstab</title>
+
+    <para>In order to prevent unnecessary writes to the CF card, add the
+    <code>noatime</code> option to all the partitions listed in
+    <filename>/etc/fstab</filename>, as follows:</para>
+
+    <programlisting><xi:include href="files/etc/fstab" parse="text" /></programlisting>
+
+    <para>You will need to reboot the system to bring this change into
+    effect.</para>
+  </section>
+
   <section xml:id="sec-email-delivery">
     <title>Email delivery for system notifications</title>
 
