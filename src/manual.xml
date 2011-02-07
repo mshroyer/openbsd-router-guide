@@ -10,7 +10,7 @@
       xmlns:xlink="http://www.w3.org/1999/xlink"
       xml:lang="en">
   <info>
-    <title>Midgard Configuration Manual</title>
+    <title>Mark's OpenBSD Router Guide</title>
     <subtitle>Turning a PC Engines ALIX.2D3 into an OpenBSD &obsdVer; home router</subtitle>
     <!-- author>
       <personname>
