@@ -17,12 +17,18 @@ XSLTPROC = xsltproc --nonet
 
 ### Easy target names
 xhtml : xhtml/index.html
+web : web/index.html
 xhtml-single : xhtml-single/manual.html
 
 xhtml/index.html : $(XMLSRC) src/manual.css
 	$(XSLTPROC) --xinclude -o xhtml/ xsl/xhtml-chunk.xsl src/manual.xml
 	cp -f src/manual.css xhtml/
 	cp -prf src/images xhtml/images
+
+web/index.html : $(XMLSRC) src/manual.css
+	$(XSLTPROC) --xinclude -o web/ xsl/xhtml-chunk.xsl src/manual.xml
+	cp -f src/manual.css web/
+	cp -prf src/images web/images
 
 xhtml-single/manual.html : $(XMLSRC)
 	$(XSLTPROC) --xinclude -o xhtml-single/manual.html xsl/xhtml-single.xsl src/manual.xml
@@ -32,3 +38,4 @@ files :
 
 clean :
 	rm -rf xhtml/*
+	rm -rf web/*
