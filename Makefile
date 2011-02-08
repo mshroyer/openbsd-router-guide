@@ -33,6 +33,9 @@ out/xhtml-web/index.html : $(XMLSRC) src/manual.css
 files :
 	perl getfiles.pl
 
+upload : xhtml-web
+	scp -pr out/xhtml-web/* frodo.paleogene.net:www/markshroyer.com/guides/router/
+
 clean :
 	rm -rf out/xhtml/*
 	rm -rf out/xhtml-web/*
