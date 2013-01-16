@@ -18,8 +18,8 @@
       </personname>
       <uri type="homepage">http://markshroyer.com/</uri>
     </author -->
-    <copyright><year>2011</year><holder>Mark Shroyer</holder></copyright>
-    <date>February 2011</date>
+    <copyright><year>2013</year><holder>Mark Shroyer</holder></copyright>
+    <date>January 2013</date>
   </info>
 
   <xi:include href="ch-introduction.xml" />
