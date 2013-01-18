@@ -155,8 +155,7 @@
       </listitem>
       <listitem>
         <para>A PC workstation with: an RS-232 serial port (or a
-        USB-to-serial adapter), an Ethernet adapter, and a second network
-        adapter of any type which routes to the Internet</para>
+        USB-to-serial adapter) and an ethernet adapter</para>
       </listitem>
     </itemizedlist>
 

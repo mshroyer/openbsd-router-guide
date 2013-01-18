@@ -12,7 +12,7 @@
   <title>OpenBSD Installation</title>
 
   <section xml:id="sec-pxe-server">
-    <title>PXE server setup</title>
+    <title>Boot server setup</title>
 
     <para>Installing OpenBSD on the ALIX.2D3 is a little more involved than
     installing on standard PC hardware, due to the lack of a video card or
@@ -21,131 +21,130 @@
     boot into the installer, by running a PXE boot server on the PC
     mentioned in <xref linkend="sec-prerequisites" />.</para>
 
-    <para>Thankfully, the Ubuntu desktop live CD is flexible enough to
-    serve as a platform for the temporary boot server, without requiring
-    any permanent changes to your PC.</para>
+    <para>Thankfully, the Fedora 18 desktop live CD is flexible enough to
+    provide this temporary boot server without requiring any permanent
+    changes to your PC.  The server will run PXE (appropriately configured
+    DHCP and TFTP) services, along with an FTP server for providing OpenBSD
+    system sets to the installer without requiring the target system to be
+    able to route out to the wider Internet.</para>
 
-    <section xml:id="sec-pxe-ubuntu-packages">
-      <title>Ubuntu packages</title>
+    <section xml:id="sec-pxe-fedora-packages">
+      <title>Fedora packages</title>
 
-      <para>Boot the Ubuntu live CD and quit the installer.  Ensure that
-      Ubuntu has a working Internet connection, then enable the "universe"
-      package repository by uncommenting the corresponding lines in
-      <filename>/etc/apt/sources.list</filename>.  Now open a terminal and
-      run the following commands to install prerequisite packages:</para>
+      <para>Boot the Fedora live CD and click on "Try Fedora."  Ensure the
+      system has a working Internet connection, then open a terminal and
+      invoke yum to install prerequisite packages:</para>
 
 <screen width="80">
-$ sudo -s
-# apt-get update
-# apt-get install dhcp3-server tftpd xinetd cu</screen>
+fedora$ su
+fedora# yum install dnsmasq vsftpd uucp</screen>
+    </section>
+
+    <section xml:id="sec-pxe-openbsd-files">
+      <title>OpenBSD installation files</title>
+
+      <para>For PXE booting, you will need to serve the pxeboot bootstrap
+      and bsd.rd ramdisk kernel via TFTP.  Make a directory to serve as the
+      TFTP root and copy these there from your favorite
+      mirror:<footnote><para>If you've purchased an OpenBSD CD set, you can
+      find the files there instead, of course.</para></footnote></para>
+
+<screen width="80">
+fedora# mkdir -p /var/tftp
+fedora# cd /var/tftp
+fedora# lftp
+lftp :~> open ftp3.usa.openbsd.org
+lftp ftp3.usa.openbsd.org:~> cd /pub/OpenBSD/5.2/i386
+lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> mget pxeboot bsd.rd
+lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> quit
+fedora#</screen>
+
+      <para>Once the installer is running from bsd.rd, it will need to
+      fetch the OpenBSD system sets.  So likewise, copy these into an FTP
+      directory:</para>
+
+<screen width="80">
+fedora# mkdir -p /var/ftp/pub/OpenBSD/5.2/i386
+fedora# cd /var/ftp/pub/OpenBSD/5.2/i386
+lftp :~> open ftp3.usa.openbsd.org
+lftp ftp3.usa.openbsd.org:~> cd /pub/OpenBSD/5.2/i386
+lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> mget *.tgz
+lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> quit
+fedora#</screen>
     </section>
 
     <section xml:id="sec-pxe-network-config">
-      <title>Network configuration &amp; NAT</title>
+      <title>Host system configuration</title>
 
-      <para>Run this command to configure a static address on the PC's
-      Ethernet interface:</para>
-
-<screen width="80">
-# ifconfig eth0 up 192.168.2.1 netmask 255.255.255.0</screen>
-
-      <para>I've found you may also need to configure the static address on
-      your Ethernet adapter in the "Network Connections" dialog (under
-      Preferences in the System menu) to prevent Network Manager from
-      getting in the way.  Yes, this is a little hackish, but we only need
-      it to work for the duration of the install...</para>
-
-      <para>Now enable routing and configure a simple NAT using
-      <command>iptables</command> so that the ALIX board can access the
-      Internet through your PC's wireless connection:</para>
+      <para>As configured out of the box, certain Fedora system processes
+      will get in the way of the PXE server: default SELinux policies will
+      prevent dnsmasq from serving files from
+      <filename>/var/tftp</filename>, firewall rules will hinder access to
+      the DHCP service, and NetworkManager will interfere with the IP
+      address configuration of your Ethernet interface.  As this is only a
+      live CD, it is simplest to just disable these problematic services
+      and get on with it:</para>
 
 <screen width="80">
-# echo 1 > /proc/sys/net/ipv4/ip_forward
-# iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-# iptables -A FORWARD -i eth0 -j ACCEPT
-# iptables -A FORWARD -i wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT</screen>
+fedora# setenforce 0
+fedora# systemctl stop firewalld.service
+fedora# systemctl stop NetworkManager.service</screen>
+
+      <para>If your computer accesses your LAN through its Ethernet port,
+      disconnect it from your LAN now.  Run this command to configure a
+      static address on the PC's Ethernet interface, substituting your own
+      interface's name in place of em1:</para>
+
+<screen width="80">
+fedora# ip link set up dev em1
+fedora# ip addr change 192.168.2.1/24 dev em1</screen>
     </section>
 
-    <section xml:id="sec-pxe-dhcp-server">
-      <title>DHCP server</title>
+    <section xml:id="sec-pxe-dhcp-tftp-server">
+      <title>DHCP and TFTP server</title>
 
-      <para>Replace <filename>/etc/dhcp3/dhcpd.conf</filename> with the following:
-      </para>
-
-<programlisting>
-authoritative;
-
-shared-network LOCAL-NET {
-  option domain-name-servers 8.8.8.8;
-
-  subnet 192.168.2.0 netmask 255.255.255.0 {
-    option routers 192.168.2.1;
-    filename "pxeboot";
-    range 192.168.2.100 192.168.2.200;
-    default-lease-time 600;
-    max-lease-time 7200;
-  }
-}
-</programlisting>
-
-      <para>Also, edit the file
-      <filename>/etc/default/dhcp3-server</filename> so that its last line
-      reads:</para>
+      <para>Replace <filename>/etc/dnsmasq.conf</filename> with the
+      following:</para>
 
 <programlisting>
-INTERFACES="eth0"
+dhcp-range=192.168.2.50,192.168.2.150,12h
+dhcp-boot=pxeboot
+enable-tftp
+tftp-root=/var/tftp
 </programlisting>
 
-      <para>Now you can start the DHCP server.</para>
+      <para>Now you can start the DHCP and TFTP server.</para>
 
 <screen width="80">
-# /etc/init.d/dhcp3-server start</screen>
+fedora# systemctl start dnsmasq.service</screen>
     </section>
 
-    <section xml:id="sec-pxe-tftp-server">
-      <title>TFTP server</title>
+    <section xml:id="sec-pxe-ftp-server">
+      <title>FTP server</title>
 
-      <para>Create an xinetd file at
-      <filename>/etc/xinetd.d/tftp</filename> with:</para>
-
-<programlisting>
-service tftp
-{
-  socket_type = dgram
-  protocol = udp
-  wait = yes
-  user = root
-  server = /usr/sbin/in.tftpd
-  server_args = -s /tftpboot
-}
-</programlisting>
-
-      <para>Next create the aforementioned directory
-      <filename>/tftpboot</filename>.  Download the files
-      <filename>bsd.rd</filename> and <filename>pxeboot</filename> from the
-      <filename>/&obsdVer;/i386/</filename> directory on your favorite OpenBSD
-      mirror and copy them here.  Then, restart xinetd to load the new
-      configuration:</para>
+      <para>The Fedora package for vsftpd is configured to serve out of
+      <filename>/var/ftp</filename> by default, so no special configuration
+      is needed.  Just start the daemon:</para>
 
 <screen width="80">
-# /etc/init.d/xinetd restart</screen>
+fedora# systemctl start vsftpd.service</screen>
     </section>
 
     <section xml:id="sec-pxe-serial-console">
       <title>Serial console</title>
 
-      <para>Connect your laptop's serial port (or plugged-in USB-serial
-      adapter) to the ALIX board's serial port with your null modem cable,
-      then use the <command>cu</command> command to open the serial
-      console.  For example, if you're using a USB adapter:</para>
+      <para>Connect your laptop's serial port (or USB-serial adapter) to
+      the ALIX board's serial port with your null modem cable, then use the
+      <command>cu</command> command to open the serial console.  For
+      example, if you're using a USB adapter:</para>
 
 <screen width="80">
-# cu -e -o -s 115200 -l /dev/ttyUSB0</screen>
+fedora# cu -e -o -s 115200 -l /dev/ttyUSB0</screen>
     </section>
   </section>
 
   <section xml:id="sec-pxe-booting">
-    <title>PXE booting</title>
+    <title>PXE booting the ALIX</title>
 
     <para>With your serial console ready, plug in the ALIX board's power
     adapter, and you should see the board begin to boot.  Enter the
