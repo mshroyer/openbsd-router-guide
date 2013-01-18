@@ -68,7 +68,7 @@ fedora# mkdir -p /var/ftp/pub/OpenBSD/5.2/i386
 fedora# cd /var/ftp/pub/OpenBSD/5.2/i386
 lftp :~> open ftp3.usa.openbsd.org
 lftp ftp3.usa.openbsd.org:~> cd /pub/OpenBSD/5.2/i386
-lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> mget *.tgz
+lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> mget bsd* *.tgz
 lftp ftp3.usa.openbsd.org:/pub/OpenBSD/5.2/i386> quit
 fedora#</screen>
     </section>
@@ -88,6 +88,7 @@ fedora#</screen>
 <screen width="80">
 fedora# setenforce 0
 fedora# systemctl stop firewalld.service
+fedora# systemctl disable NetworkManager.service
 fedora# systemctl stop NetworkManager.service</screen>
 
       <para>If your computer accesses your LAN through its Ethernet port,
@@ -180,7 +181,8 @@ boot> bsd.rd</screen>
         </step>
         <step>
           <para>Opt to start <command>sshd(8)</command> and
-          <command>ntpd(8)</command> by default.</para>
+          <command>ntpd(8)</command> by default.  (I like to use
+	  us.pool.ntp.org for my NTP server.)</para>
         </step>
         <step>
           <para>Specify that you do not expect to run the X Window System.
@@ -188,13 +190,10 @@ boot> bsd.rd</screen>
           possibly improving your system's security.</para>
         </step>
         <step>
-          <para>Set the default console to com0.</para>
+          <para>Set the default console to com0, at 115200 baud.</para>
         </step>
         <step>
           <para>Skip setting up a regular user account for now.</para>
-        </step>
-        <step>
-          <para>Enter your timezone.</para>
         </step>
       </procedure>
     </section>
@@ -203,14 +202,16 @@ boot> bsd.rd</screen>
       <title>Partitioning</title>
 
       <para>Next you will need to set up your disk partitions and slices.
-      In <command>fdisk(8)</command>, specify that you want to use the
-      whole disk for OpenBSD.  Then you will be brought to the BSD disk
-      label editor.</para>
+      When prompted, specify that you want to use DUIDs rather than device
+      names in fstab.  In <command>fdisk(8)</command>, specify that you
+      want to use the whole disk for OpenBSD.  Then you will be brought to
+      the BSD disk label editor.</para>
 
-      <para>Press <keycap>P</keycap> to view the disk's current BSD slices;
-      you shouldn't see anything here except the "c" slice, which
-      represents the entire disk.  Use the <keycap>A</keycap> command to
-      create the disk slice set shown in <xref
+      <para>Enter <keycap>C</keycap> to create a custom layout within the
+      disklabel editor, then press <keycap>P</keycap> to view the disk's
+      current BSD slices; you shouldn't see anything here except the "c"
+      slice, which represents the entire disk.  Use the <keycap>A</keycap>
+      command to create the disk slice set shown in <xref
       linkend="tab-openbsd-slices"/>.</para>
 
       <table xml:id="tab-openbsd-slices" frame="all">
@@ -230,8 +231,8 @@ boot> bsd.rd</screen>
               <entry>wd0a</entry>
               <entry>4.2BSD</entry>
               <entry>/</entry>
-              <entry>1,048,576</entry>
-              <entry>512 MB</entry>
+              <entry>2,097,152</entry>
+              <entry>1 GB</entry>
             </row>
             <row>
               <entry>wd0d</entry>
@@ -244,22 +245,22 @@ boot> bsd.rd</screen>
               <entry>wd0e</entry>
               <entry>4.2BSD</entry>
               <entry>/var</entry>
-              <entry>6,291,456</entry>
-              <entry>3 GB</entry>
+              <entry>16,777,216</entry>
+              <entry>8 GB</entry>
             </row>
             <row>
               <entry>wd0f</entry>
               <entry>4.2BSD</entry>
               <entry>/usr</entry>
-              <entry>20,971,520</entry>
-              <entry>10 GB</entry>
+              <entry>25,165,824</entry>
+              <entry>12 GB</entry>
             </row>
             <row>
               <entry>wd0g</entry>
               <entry>4.2BSD</entry>
               <entry>/home</entry>
-              <entry>2,159,338</entry>
-              <entry>1.03 GB</entry>
+              <entry>17,404,018</entry>
+              <entry>8.3 GB</entry>
             </row>
           </tbody>
         </tgroup>
@@ -276,19 +277,20 @@ boot> bsd.rd</screen>
       <title>Installation sets</title>
 
       <para>Next you will be asked where to find the OpenBSD installation
-      sets: choose the default mechanism, http, and use the default OpenBSD
-      mirror (or any other mirror of your choice).  Make any desired
-      changes to the default set selection and then proceed to the next
-      stage of the installer.<footnote><para>I have heard it said that it
-      is a good idea to install all of the OpenBSD sets if one wants to
-      build packages from the ports tree, even if one does not intend to
-      run X11.  However, I have not found this to be necessary in my own
-      experience.</para></footnote></para>
+      sets; choose FTP, and enter the server address 192.168.2.1.  Ignore
+      any warning that your FTP server is missing the document
+      <filename>INSTALL.i386</filename> and proceed with the installation.
+      Select all available sets (including the X sets) except for
+      <filename>bsd.mp</filename>.</para>
+    </section>
 
-      <para>Once the sets have been installed, you can shut down your
-      Ubuntu PXE boot server and reboot the ALIX board into its new OpenBSD
-      installation.  You may also wish to disable PXE booting in the ALIX's
-      BIOS while you are not using it.</para>
+    <section xml:id="sec-final">
+      <title>Final steps</title>
+
+      <para>As a final step in the installation process you will be
+      prompted for your system time zone.  Afterward you will be dropped to
+      a shell, from which you can reboot into the newly-installed operating
+      system.</para>
     </section>
   </section>
 </chapter>
