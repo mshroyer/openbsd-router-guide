@@ -212,7 +212,9 @@ boot> bsd.rd</screen>
       current BSD slices; you shouldn't see anything here except the "c"
       slice, which represents the entire disk.  Use the <keycap>A</keycap>
       command to create the disk slice set shown in <xref
-      linkend="tab-openbsd-slices"/>.</para>
+      linkend="tab-openbsd-slices"/>.  Note that we intentionally skip
+      slice b here which, if present, would automatically be configured as
+      a swap device on boot.</para>
 
       <table xml:id="tab-openbsd-slices" frame="all">
         <title>OpenBSD disk slices</title>
