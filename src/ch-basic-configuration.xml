@@ -182,7 +182,7 @@ ChallengeResponseAuthentication no
     SIGHUP signal to force it to reload its configuration file:</para>
 
 <screen width="80">
-# kill -HUP `cat /var/run/sshd.pid`
+# /etc/rc.d/sshd restart
 </screen>
   </section>
 
@@ -207,8 +207,12 @@ ChallengeResponseAuthentication no
     be able to keep any laptops synchronized with your home NTP server
     while you are away.</para>
 
-    <para>Kill and restart <command>ntpd(8)</command> to load the new
-    configuration.</para>
+    <para>Restart <command>ntpd(8)</command> to load the new
+    configuration:</para>
+
+<screen width="80">
+# /etc/rc.d/ntpd restart
+</screen>
   </section>
 </chapter>
 
