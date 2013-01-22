@@ -109,7 +109,7 @@
     <section xml:id="sec-network-interfaces-lan">
       <title>LAN interface configuration</title>
 
-      <para>Since our consumer DSL Internet connection only affords us one
+      <para>Since our consumer Internet connection only affords us one
       public IPv4 address, we will of course be putting our LAN behind a
       NAT, on a private (RFC 1918) network block.  Setting up packet
       forwarding and the NAT will be covered in a following section; but

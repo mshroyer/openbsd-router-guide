@@ -131,7 +131,7 @@
 
     <itemizedlist>
       <listitem>
-        <para>A PPPoE-based DSL Internet connection (with DSL modem
+        <para>A cable or PPPoE-based DSL Internet connection (with modem
         already set up)
         </para>
       </listitem>
@@ -139,12 +139,12 @@
         <para>ALIX.2D3 board with power supply and, optionally, enclosure</para>
       </listitem>
       <listitem>
-        <para>16 GB Compact Flash card<footnote><para>While any 4 GB or
+        <para>32 GB Compact Flash card<footnote><para>While any 4 GB or
         larger Compact Flash card should easily suffice (and much smaller
         can be managed, depending on how much effort you are willing to
         expend paring down the OpenBSD operating system, and the exact
         nature of your requirements), the disk partition scheme described
-        in this document assumes the user of 16 GB
+        in this document assumes the use of 32 GB
         media.</para></footnote></para>
       </listitem>
       <listitem>
@@ -175,8 +175,12 @@
       </listitem>
       <listitem>
         <para>CR2032 battery holder with 20.4mm lead spacing<footnote>
-        <para>For instance, Renata CR2032FH1 or Panasonic BR2032-1HE, as
-        per the ALIX.2D3 documentation.</para></footnote>
+        <para>For instance, <link
+        xlink:href="http://octopart.com/cr2032+mfr+fh1-renata-18985577">Renata
+        CR2032FH1</link> or <link
+        xlink:href="http://octopart.com/br2032-1he-panasonic-155416">Panasonic
+        BR2032-1HE</link>, as per the ALIX.2D3
+        documentation.</para></footnote>
         </para>
       </listitem>
     </itemizedlist>
