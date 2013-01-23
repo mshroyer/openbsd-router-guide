@@ -16,20 +16,17 @@
 
     <para>Before you can set up your OpenBSD box as any kind of router, you
     will need to enable IPv4 packet forwarding in the kernel through the
-    <command>sysctl(3)</command> mechanism.  For added security, and
-    because you generally will not need this feature anyway, you should
-    also disable ICMP redirects.  Issue these commands as root:</para>
+    <command>sysctl(3)</command> mechanism.  Issue this command as
+    root:</para>
 
 <screen width="80">
 # sysctl -w net.inet.ip.forwarding=1
-# sysctl -w net.inet.ip.redirect=0
 </screen>
 
-    <para>Also, append the lines</para>
+    <para>Also, append the line</para>
 
 <programlisting>
 net.inet.ip.forwarding=1
-net.inet.ip.redirect=0
 </programlisting>
 
     <para>to the file <filename>/etc/sysctl.conf</filename> in order to
@@ -60,14 +57,6 @@ net.inet.ip.redirect=0
 # pfctl -f /etc/pf.conf
 # pfctl -e
 </screen>
-
-      <para>Then, so that the packet filter will start automatically at
-      boot time, add the following line to
-      <filename>/etc/rc.conf.local</filename>.</para>
-
-<programlisting>
-pf=YES
-</programlisting>
     </section>
 
     <section xml:id="sec-gateway-ftp-proxy">
@@ -88,20 +77,20 @@ pf=YES
       redirection rules we've already added to
       <filename>pf.conf</filename>, as shown above.</para>
 
-      <para>Now we need only run the proxy.  Run the following command to
-      start (and daemonize) it:</para>
-
-<screen width="80">
-# ftp-proxy
-</screen>
-
-      <para>We'll also want <command>ftp-proxy(8)</command> to run
-      automatically when the system boots, so append the following to
+      <para>We'll want <command>ftp-proxy(8)</command> to run automatically
+      when the system boots, so append the following to
       <filename>/etc/rc.conf.local</filename>:</para>
 
 <programlisting>
 ftpproxy_flags=""
 </programlisting>
+
+      <para>Now we need only run the proxy.  Run the following command to
+      start (and daemonize) it:</para>
+
+<screen width="80">
+# /etc/rc.d/ftpproxy start
+</screen>
     </section>
 
   </section>
@@ -164,7 +153,7 @@ dhcpd_flags="vr1"
       <para>Then, start the daemon manually by running:</para>
 
 <screen width="80">
-# /usr/sbin/dhcpd vr1
+# /etc/rc.d/dhcpd start
 </screen>
     </section>
   </section>
@@ -278,17 +267,24 @@ $TTL 3h
     <section xml:id="sec-gateway-bind-starting">
       <title>Starting BIND</title>
 
-      <para>Start the BIND domain name server by simply running the command
-      <command>named</command> as root.  Watch for any error messages which
-      may indicate a syntax error in the zone files or in the BIND
-      configuration file.  If the daemon starts successfully, add the
-      following line to <filename>/etc/rc.conf.local</filename> so that
+      <para>Add the following line to
+      <filename>/etc/rc.conf.local</filename> so that
       <command>named(8)</command> will run automatically on subsequent
       reboots:</para>
 
 <programlisting>
 named_flags=""
 </programlisting>
+
+      <para>Finally, start the BIND domain name server by simply running
+      the command:</para>
+
+<programlisting>
+# /etc/rc.d/named start
+</programlisting>
+
+      <para>Watch for any error messages which may indicate a syntax error
+      in the zone files or in the BIND configuration file.</para>
     </section>
   </section>
 </chapter>
