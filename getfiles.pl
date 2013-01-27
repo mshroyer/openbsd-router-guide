@@ -26,6 +26,8 @@ use constant FILES => (
                        '/etc/dhcpd.conf',
                        '/var/named/etc/named.conf',
                        '/etc/fstab',
+                       '/etc/openvpn/openvpn.conf',
+                       '/etc/hostname.tun0',
                       );
 
 ### END CONFIGURATION #####################################################

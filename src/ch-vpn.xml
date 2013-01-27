@@ -141,6 +141,23 @@ pkihost$ openssl ca -config openssl.cnf -gencrl -extensions crl_ext \
 
     <para>Install the OpenVPN package.</para>
 
+    <para>Put OpenVPN daemon configuration in
+    <filename>/etc/openvpn/openvpn.conf</filename>:</para>
+
+    <programlisting><xi:include href="files/etc/openvpn/openvpn.conf" parse="text" /></programlisting>
+
+    <para>Generate DH parameters and HMAC key:</para>
+
+<screen width="80">
+# cd /etc/openvpn
+# mkdir -m 700 keys
+# openssl dhparam -out keys/dh4096.pem 4096
+# openvpn --genkey --secret keys/ta.key
+</screen>
+
+    <para>Configure tun0 interface:</para>
+
+    <programlisting><xi:include href="files/etc/hostname.tun0" parse="text" /></programlisting>
 
   </section>
 </chapter>
