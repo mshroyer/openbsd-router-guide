@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-vpn"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>VPN</title>
+
+  <section xml:id="sec-pki">
+    <title>Public Key Infrastructure</title>
+
+    <para>On separate machine that you trust, create a directory
+    <filename>~/pki</filename> to contain your PKI database.  In this
+    directory, create an OpenSSL configuration file
+    <filename>openssl.cnf</filename> as follows:</para>
+
+    <programlisting><xi:include href="otherfiles/pki/openssl.cnf" parse="text" /></programlisting>
+
+    <para>Initialize the index and other files required for PKI
+    management:</para>
+
+<screen width="80">
+pkihost$ cd ~/pki
+pkihost$ mkdir certs newcerts private crl
+pkihost$ chmod 700 private
+pkihost$ touch index.txt
+pkihost$ echo 01 >serial
+pkihost$ echo 01 >crlnumber
+</screen>
+
+    <para>Create a self-signed root certificate authority:</para>
+
+<screen width="80">
+pkihost$ openssl req -config openssl.cnf -new -x509 -extensions v3_ca \
+    -keyout private/cakey.pem -out cacert.pem -days 3652
+Generating a 4096 bit RSA private key
+........................................................................++
+.................................................++
+writing new private key to 'private/cakey.pem'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Organization name [Homestarmy]:
+Organizational unit name []:
+Email address [root@homestarmy.net]:
+Locality name (city, district) []:
+State or province name (full name) []:
+2-Letter country code []:
+Common name (person or hostname) []:Homestarmy CA
+</screen>
+
+    <para>Next create a server key for the router's OpenVPN service:</para>
+
+<screen width="80">
+pkihost$ openssl req -config openssl.cnf -new -nodes -keyout \
+    private/homestarmy.net.pem -out homestarmy.net.req
+Generating a 4096 bit RSA private key
+................................................................................
+................................................................................
+.................................++
+................................................................................
+.++
+writing new private key to 'private/homestarmy.net.pem'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Organization name [Homestarmy]:
+Organizational unit name []:
+Email address [root@homestarmy.net]:
+Locality name (city, district) []:
+State or province name (full name) []:
+2-Letter country code []:
+Common name (person or hostname) []:homestarmy.net
+pkihost$ openssl ca -config openssl.cnf -extensions v3_req -in homestarmy.net.req
+pkihost$ cat newcerts/01.pem cacert.pem >certs/homestarmy.net.pem
+pkihost$ rm homestarmy.net.req
+</screen>
+
+    <para>Finally, create a VPN client key as follows:</para>
+
+<screen width="80">
+pkihost$ openssl req -config openssl.cnf -new -keyout private/valhalla.pem \
+    -out valhalla.req
+Generating a 4096 bit RSA private key
+................................................................................
+................................................................................
+........................................++
+.........................................++
+writing new private key to 'private/valhalla.pem'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Organization name [Homestarmy]:
+Organizational unit name []:
+Email address [root@homestarmy.net]:
+Locality name (city, district) []:
+State or province name (full name) []:
+2-Letter country code []:
+Common name (person or hostname) []:valhalla
+pkihost$ openssl ca -config openssl.cnf -extensions v3_req_client \
+    -in valhalla.req
+pkihost$ cat newcerts/02.pem cacert.pem >certs/valhalla.pem
+pkihost$ rm valhalla.req
+</screen>
+
+    <para>Also create an empty certificate revocation list for your new
+    PKI:</para>
+
+<screen width="80">
+pkihost$ openssl ca -config openssl.cnf -gencrl -extensions crl_ext \
+    -out cacrl.pem
+</screen>
+  </section>
+
+  <section xml:id="sec-openvpn">
+    <title>OpenVPN configuration</title>
+
+    <para>Install the OpenVPN package.</para>
+
+
+  </section>
+</chapter>
