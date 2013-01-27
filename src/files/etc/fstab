@@ -1,5 +1,5 @@
-/dev/wd0a /     ffs rw,noatime              1 1
-/dev/wd0g /home ffs rw,nodev,nosuid,noatime 1 2
-/dev/wd0d /tmp  ffs rw,nodev,nosuid,noatime 1 2
-/dev/wd0f /usr  ffs rw,nodev,noatime        1 2
-/dev/wd0e /var  ffs rw,nodev,nosuid,noatime 1 2
+91072bdd84ca38e1.a / ffs rw 1 1
+91072bdd84ca38e1.g /home ffs rw,nodev,nosuid,noatime 1 2
+91072bdd84ca38e1.d /tmp ffs rw,nodev,nosuid,noatime 1 2
+91072bdd84ca38e1.f /usr ffs rw,nodev,noatime 1 2
+91072bdd84ca38e1.e /var ffs rw,nodev,nosuid,noatime 1 2

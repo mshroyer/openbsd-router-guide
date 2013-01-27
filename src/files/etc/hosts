@@ -1,4 +1,4 @@
-::1             localhost.example.net localhost
-127.0.0.1       localhost.example.net localhost
-::1             midgard.example.net midgard
-127.0.0.1       midgard.example.net midgard
+127.0.0.1	localhost
+::1		localhost
+127.0.0.1	midgard.example.net midgard
+::1		midgard.example.net midgard
