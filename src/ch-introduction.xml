@@ -131,9 +131,8 @@
 
     <itemizedlist>
       <listitem>
-        <para>A cable or PPPoE-based DSL Internet connection (with modem
-        already set up)
-        </para>
+        <para>A cable Internet connection (with DOCSIS cable modem already
+        set up)</para>
       </listitem>
       <listitem>
         <para>ALIX.2D3 board with power supply and, optionally, enclosure</para>
