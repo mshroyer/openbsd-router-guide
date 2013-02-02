@@ -175,27 +175,69 @@ pkihost$ openssl ca -config openssl.cnf -revoke revoked-cert.pem
   </section>
 
   <section xml:id="sec-openvpn">
-    <title>OpenVPN configuration</title>
+    <title>OpenVPN setup</title>
 
-    <para>Install the OpenVPN package.</para>
+    <section xml:id="sec-openvpn-installation">
+      <title>Installation</title>
 
-    <para>Put OpenVPN daemon configuration in
-    <filename>/etc/openvpn/openvpn.conf</filename>:</para>
+      <para>OpenVPN can be installed from a pre-compiled package (available
+      on the OpenBSD &obsdVer; installation CD, or from an FTP
+      mirror):</para>
 
-    <programlisting><xi:include href="files/etc/openvpn/openvpn.conf" parse="text" /></programlisting>
+<screen width="80">
+# pkg_add openvpn-2.2.2p1.tgz
+</screen>
 
-    <para>Generate DH parameters and HMAC key:</para>
+      <para>If you prefer, you can instead build OpenVPN directly from the
+      ports tree as described in <xref linkend="sec-ports" />.</para>
+    </section>
+
+    <section xml:id="sec-openvpn-configuration">
+      <title>Configuration</title>
+
+      <para>Put OpenVPN daemon configuration in
+      <filename>/etc/openvpn/openvpn.conf</filename>:</para>
+
+      <programlisting><xi:include href="files/etc/openvpn/openvpn.conf" parse="text" /></programlisting>
+
+      <para>Prepare Diffie-Hellman key exchange parameters for use by the
+      server, storing them at the location referenced by the given
+      configuration, as generating these parmaeters will take quite a long
+      time and you won't want to wait for OpenVPN to do this implicitly at
+      startup:</para>
 
 <screen width="80">
 # cd /etc/openvpn
 # mkdir -m 700 keys
 # openssl dhparam -out keys/dh4096.pem 4096
+</screen>
+
+      <para>Also generate a shared key for TLS HMAC authentication, which
+      will be shared between the server and all clients:</para>
+
+<screen width="80">
 # openvpn --genkey --secret keys/ta.key
 </screen>
 
-    <para>Configure tun0 interface:</para>
+      <para>Configure tun0 interface by saving the following as
+      <filename>/etc/hostname.tun0</filename>:</para>
 
-    <programlisting><xi:include href="files/etc/hostname.tun0" parse="text" /></programlisting>
+<programlisting><xi:include href="files/etc/hostname.tun0" parse="text" /></programlisting>
 
+      <para>Lastly, configure OpenVPN to start at boot by adding the
+      following to <filename>/etc/rc.local</filename>:</para>
+
+<programlisting><xi:include href="files/etc/rc.local" parse="text" /></programlisting>
+
+      <para>And then appending to
+      <filename>/etc/rc.conf.local</filename>:</para>
+
+<programlisting>
+openvpn_flags=
+</programlisting>
+
+      <para>Reboot the router to ensure that OpenVPN starts automatically
+      as expected.</para>
+    </section>
   </section>
 </chapter>

@@ -28,6 +28,7 @@ use constant FILES => (
                        '/etc/fstab',
                        '/etc/openvpn/openvpn.conf',
                        '/etc/hostname.tun0',
+                       '/etc/rc.local',
                       );
 
 ### END CONFIGURATION #####################################################
