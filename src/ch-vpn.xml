@@ -11,18 +11,29 @@
          xml:lang="en">
   <title>VPN</title>
 
-  <section xml:id="sec-pki">
+  <para>This chapter describes how to set up a local OpenVPN service for
+  remote access to the network, as well as for secure browsing from public
+  Wi-Fi hotspots.  Authentication to this VPN will be performed using x.509
+  certificates, signed by a custom-purpose certificate authority.</para>
+
+  <section xml:id="sec-vpn-pki">
     <title>Public Key Infrastructure</title>
 
-    <para>On separate machine that you trust, create a directory
-    <filename>~/pki</filename> to contain your PKI database.  In this
-    directory, create an OpenSSL configuration file
-    <filename>openssl.cnf</filename> as follows:</para>
+    <para>Before you can set up the VPN itself, then, you must prepare a
+    suitable x.509 public key infrastructure.</para>
 
-    <programlisting><xi:include href="otherfiles/pki/openssl.cnf" parse="text" /></programlisting>
+    <section xml:id="sec-vpn-pki-config">
+      <title>OpenSSL configuration and CA preparation</title>
 
-    <para>Initialize the index and other files required for PKI
-    management:</para>
+      <para>On a separate machine that you trust, create a directory
+      <filename>~/pki</filename> to contain your PKI database.  In this
+      directory, create an OpenSSL configuration file
+      <filename>openssl.cnf</filename> as follows:</para>
+
+      <programlisting><xi:include href="otherfiles/pki/openssl.cnf" parse="text" /></programlisting>
+
+      <para>Initialize the index and other files required for PKI
+      management:</para>
 
 <screen width="80">
 pkihost$ cd ~/pki
@@ -32,8 +43,13 @@ pkihost$ touch index.txt
 pkihost$ echo 01 >serial
 pkihost$ echo 01 >crlnumber
 </screen>
+    </section>
 
-    <para>Create a self-signed root certificate authority:</para>
+    <section xml:id="sec-vpn-pki-keys">
+      <title>Certificate authority and server, client keys</title>
+
+      <para>Now you're ready to create a self-signed root certificate
+      authority:</para>
 
 <screen width="80">
 pkihost$ openssl req -config openssl.cnf -new -x509 -extensions v3_ca \
@@ -61,7 +77,7 @@ State or province name (full name) []:
 Common name (person or hostname) []:Homestarmy CA
 </screen>
 
-    <para>Next create a server key for the router's OpenVPN service:</para>
+      <para>Next create a server key for the router's OpenVPN service:</para>
 
 <screen width="80">
 pkihost$ openssl req -config openssl.cnf -new -nodes -keyout \
@@ -93,7 +109,7 @@ pkihost$ cat newcerts/01.pem cacert.pem >certs/homestarmy.net.pem
 pkihost$ rm homestarmy.net.req
 </screen>
 
-    <para>Finally, create a VPN client key as follows:</para>
+      <para>Finally, create a VPN client key as follows:</para>
 
 <screen width="80">
 pkihost$ openssl req -config openssl.cnf -new -keyout private/valhalla.pem \
@@ -126,14 +142,36 @@ pkihost$ openssl ca -config openssl.cnf -extensions v3_req_client \
 pkihost$ cat newcerts/02.pem cacert.pem >certs/valhalla.pem
 pkihost$ rm valhalla.req
 </screen>
+    </section>
 
-    <para>Also create an empty certificate revocation list for your new
-    PKI:</para>
+    <section xml:id="sec-vpn-pki-crl">
+      <title>Certificate revocation list</title>
+
+      <para>If your server key or one of your client keys is leaked, it
+      will be convenient to be able to revoke that specific key without
+      needing to start over with a new PKI.  The certificate revocation
+      list is how you will do this — when a certificate needs to be
+      revoked, a special kind of signature can be created by the
+      CA to indicate that the given certificate is no longer valid.  A
+      certificate revocation list is a collection of zero or more such
+      signatures, which can be distributed to PKI users as
+      necessary.</para>
+
+      <para>Create an empty certificate revocation list as follows:</para>
 
 <screen width="80">
 pkihost$ openssl ca -config openssl.cnf -gencrl -extensions crl_ext \
     -out cacrl.pem
 </screen>
+
+      <para>Should you subsequently need to revoke a certificate issued
+      from your CA, issue the following command to do so, then rebuild the
+      CRL as shown above:</para>
+
+<screen width="80">
+pkihost$ openssl ca -config openssl.cnf -revoke revoked-cert.pem
+</screen>
+    </section>
   </section>
 
   <section xml:id="sec-openvpn">

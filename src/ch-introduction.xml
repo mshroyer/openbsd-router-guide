@@ -18,7 +18,8 @@
     xlink:href="http://www.pcengines.ch/alix2d3.htm">PC Engines GmbH
     ALIX.2D3</link> system board as an OpenBSD &obsdVer;-based NAT gateway,
     providing a small LAN with a PF NAT/firewall, recursive DNS service,
-    Network Time Protocol synchronization, and more.</para>
+    Network Time Protocol synchronization, remove access via OpenVPN, and
+    more.</para>
 
     <figure xml:id="fig-alix">
       <title>An ALIX as an OpenBSD router</title>
