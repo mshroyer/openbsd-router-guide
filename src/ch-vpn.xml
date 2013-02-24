@@ -240,4 +240,13 @@ openvpn_flags=
       as expected.</para>
     </section>
   </section>
+
+  <section xml:id="sec-client">
+    <title>Client configuration</title>
+
+    <para>A client to this OpenVPN concentrator can be configured as
+    follows:</para>
+
+    <programlisting><xi:include href="otherfiles/client.ovpn" parse="text" /></programlisting>
+  </section>
 </chapter>
