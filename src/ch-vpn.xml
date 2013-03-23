@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE chapter [
+<!ENTITY % manualent SYSTEM "manual.ent">
+%manualent;
+]>
+<chapter xml:id="ch-vpn"
+         xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:lang="en">
+  <title>VPN</title>
+
+  <para>This chapter describes how to set up a local OpenVPN service for
+  remote access to the network, as well as for secure browsing from public
+  Wi-Fi hotspots.  Authentication to this VPN will be performed using x.509
+  certificates, signed by a custom-purpose certificate authority.</para>
+
+  <section xml:id="sec-vpn-pki">
+    <title>Public Key Infrastructure</title>
+
+    <para>Before you can set up the VPN itself, then, you must prepare a
+    suitable x.509 public key infrastructure.</para>
+
+    <section xml:id="sec-vpn-pki-config">
+      <title>OpenSSL configuration and CA preparation</title>
+
+      <para>On a separate machine that you trust, create a directory
+      <filename>~/pki</filename> to contain your PKI database.  In this
+      directory, create an OpenSSL configuration file
+      <filename>openssl.cnf</filename> as follows:</para>
+
+      <programlisting><xi:include href="otherfiles/pki/openssl.cnf" parse="text" /></programlisting>
+
+      <para>Initialize the index and other files required for PKI
+      management:</para>
+
+<screen width="80">
+pkihost$ cd ~/pki
+pkihost$ mkdir certs newcerts private crl
+pkihost$ chmod 700 private
+pkihost$ touch index.txt
+pkihost$ echo 01 >serial
+pkihost$ echo 01 >crlnumber
+</screen>
+    </section>
+
+    <section xml:id="sec-vpn-pki-keys">
+      <title>Certificate authority and server, client keys</title>
+
+      <para>Now you're ready to create a self-signed root certificate
+      authority:</para>
+
+<screen width="80">
+pkihost$ openssl req -config openssl.cnf -new -x509 -extensions v3_ca \
+    -keyout private/cakey.pem -out cacert.pem -days 3652
+Generating a 4096 bit RSA private key
+........................................................................++
+.................................................++
+writing new private key to 'private/cakey.pem'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Organization name [Homestarmy]:
+Organizational unit name []:
+Email address [root@homestarmy.net]:
+Locality name (city, district) []:
+State or province name (full name) []:
+2-Letter country code []:
+Common name (person or hostname) []:Homestarmy CA
+</screen>
+
+      <para>Next create a server key for the router's OpenVPN service:</para>
+
+<screen width="80">
+pkihost$ openssl req -config openssl.cnf -new -nodes -keyout \
+    private/homestarmy.net.pem -out homestarmy.net.req
+Generating a 4096 bit RSA private key
+................................................................................
+................................................................................
+.................................++
+................................................................................
+.++
+writing new private key to 'private/homestarmy.net.pem'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Organization name [Homestarmy]:
+Organizational unit name []:
+Email address [root@homestarmy.net]:
+Locality name (city, district) []:
+State or province name (full name) []:
+2-Letter country code []:
+Common name (person or hostname) []:homestarmy.net
+pkihost$ openssl ca -config openssl.cnf -extensions v3_req -in homestarmy.net.req
+pkihost$ cat newcerts/01.pem cacert.pem >certs/homestarmy.net.pem
+pkihost$ rm homestarmy.net.req
+</screen>
+
+      <para>Finally, create a VPN client key as follows:</para>
+
+<screen width="80">
+pkihost$ openssl req -config openssl.cnf -new -keyout private/valhalla.pem \
+    -out valhalla.req
+Generating a 4096 bit RSA private key
+................................................................................
+................................................................................
+........................................++
+.........................................++
+writing new private key to 'private/valhalla.pem'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Organization name [Homestarmy]:
+Organizational unit name []:
+Email address [root@homestarmy.net]:
+Locality name (city, district) []:
+State or province name (full name) []:
+2-Letter country code []:
+Common name (person or hostname) []:valhalla
+pkihost$ openssl ca -config openssl.cnf -extensions v3_req_client \
+    -in valhalla.req
+pkihost$ cat newcerts/02.pem cacert.pem >certs/valhalla.pem
+pkihost$ rm valhalla.req
+</screen>
+    </section>
+
+    <section xml:id="sec-vpn-pki-crl">
+      <title>Certificate revocation list</title>
+
+      <para>If your server key or one of your client keys is leaked, it
+      will be convenient to be able to revoke that specific key without
+      needing to start over with a new PKI.  The certificate revocation
+      list is how you will do this — when a certificate needs to be
+      revoked, a special kind of signature can be created by the
+      CA to indicate that the given certificate is no longer valid.  A
+      certificate revocation list is a collection of zero or more such
+      signatures, which can be distributed to PKI users as
+      necessary.</para>
+
+      <para>Create an empty certificate revocation list as follows:</para>
+
+<screen width="80">
+pkihost$ openssl ca -config openssl.cnf -gencrl -extensions crl_ext \
+    -out cacrl.pem
+</screen>
+
+      <para>Should you subsequently need to revoke a certificate issued
+      from your CA, issue the following command to do so, then rebuild the
+      CRL as shown above:</para>
+
+<screen width="80">
+pkihost$ openssl ca -config openssl.cnf -revoke revoked-cert.pem
+</screen>
+    </section>
+  </section>
+
+  <section xml:id="sec-openvpn">
+    <title>OpenVPN setup</title>
+
+    <section xml:id="sec-openvpn-installation">
+      <title>Installation</title>
+
+      <para>OpenVPN can be installed from a pre-compiled package (available
+      on the OpenBSD &obsdVer; installation CD, or from an FTP
+      mirror):</para>
+
+<screen width="80">
+# pkg_add openvpn-2.2.2p1.tgz
+</screen>
+
+      <para>If you prefer, you can instead build OpenVPN directly from the
+      ports tree as described in <xref linkend="sec-ports" />.</para>
+    </section>
+
+    <section xml:id="sec-openvpn-configuration">
+      <title>Configuration</title>
+
+      <para>Put OpenVPN daemon configuration in
+      <filename>/etc/openvpn/openvpn.conf</filename>:</para>
+
+      <programlisting><xi:include href="files/etc/openvpn/openvpn.conf" parse="text" /></programlisting>
+
+      <para>Prepare Diffie-Hellman key exchange parameters for use by the
+      server, storing them at the location referenced by the given
+      configuration, as generating these parmaeters will take quite a long
+      time and you won't want to wait for OpenVPN to do this implicitly at
+      startup:</para>
+
+<screen width="80">
+# cd /etc/openvpn
+# mkdir -m 700 keys
+# openssl dhparam -out keys/dh4096.pem 4096
+</screen>
+
+      <para>Also generate a shared key for TLS HMAC authentication, which
+      will be shared between the server and all clients:</para>
+
+<screen width="80">
+# openvpn --genkey --secret keys/ta.key
+</screen>
+
+      <para>Configure tun0 interface by saving the following as
+      <filename>/etc/hostname.tun0</filename>:</para>
+
+<programlisting><xi:include href="files/etc/hostname.tun0" parse="text" /></programlisting>
+
+      <para>Lastly, configure OpenVPN to start at boot by adding the
+      following to <filename>/etc/rc.local</filename>:</para>
+
+<programlisting><xi:include href="files/etc/rc.local" parse="text" /></programlisting>
+
+      <para>And then appending to
+      <filename>/etc/rc.conf.local</filename>:</para>
+
+<programlisting>
+openvpn_flags=
+</programlisting>
+
+      <para>Reboot the router to ensure that OpenVPN starts automatically
+      as expected.</para>
+    </section>
+  </section>
+
+  <section xml:id="sec-client">
+    <title>Client configuration</title>
+
+    <para>A client to this OpenVPN concentrator can be configured as
+    follows:</para>
+
+    <programlisting><xi:include href="otherfiles/client.ovpn" parse="text" /></programlisting>
+  </section>
+</chapter>

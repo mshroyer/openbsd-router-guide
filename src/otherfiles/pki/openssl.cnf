@@ -1,0 +1,104 @@
+#
+# OpenSSL configuration file for Mark's Certificate Authority.
+# Contains all the settings needed to build the CA and sign subsequent
+# server and client keys.
+#
+
+# Settings for the openssl ca subcommand
+[ ca ]
+default_ca                      = CA_homestarmy
+
+# homestarmy certificate authority
+[ CA_homestarmy ]
+dir                             = .
+certs                           = $dir/certs
+crl_dir                         = $dir/crl
+serial                          = $dir/serial
+database                        = $dir/index.txt
+new_certs_dir                   = $dir/newcerts
+certificate                     = $dir/cacert.pem
+crlnumber                       = $dir/crlnumber
+crl                             = $dir/cacrl.pem
+private_key                     = $dir/private/cakey.pem
+randfile                        = $dir/private/.rand
+default_days                    = 3652 # 10 years
+default_crl_days                = 3652 # 10 years
+default_md                      = sha512
+preserve                        = no
+email_in_dn                     = no
+name_opt                        = ca_default
+cert_opt                        = ca_default
+policy                          = policy_homestarmy
+x509_extensions                 = usr_cert_default
+crl_extensions                  = crl_ext
+
+# x.509 DN matching policy
+[ policy_homestarmy ]
+countryName                     = optional
+stateOrProvinceName             = optional
+organizationName                = match
+organizationalUnitName          = optional
+commonName                      = supplied
+emailAddress                    = optional
+
+# Settings for the openssl req subcommand
+[ req ]
+default_bits                    = 4096
+default_keyfile                 = key.pem
+default_md                      = sha512
+string_mask                     = nombstr
+distinguished_name              = req_distinguished_name
+req_extensions                  = v3_req
+
+# Prompt texts and default values for DN parameters
+[ req_distinguished_name ]
+0.organizationName              = Organization name
+organizationalUnitName          = Organizational unit name
+emailAddress                    = Email address
+emailAddress_max                = 40
+localityName                    = Locality name (city, district)
+stateOrProvinceName             = State or province name (full name)
+countryName                     = 2-Letter country code
+countryName_min                 = 2
+countryName_max                 = 2
+commonName                      = Common name (person or hostname)
+commonName_max                  = 64
+0.organizationName_default      = Homestarmy
+emailAddress_default            = root@homestarmy.net
+localityName_default            = 
+stateOrProvinceName_default     = 
+countryName_default             = 
+
+# Extensions added to certificates when the 'req' command is invoked
+# with the -x509 option
+[ v3_ca ]
+basicConstraints                = CA:TRUE
+subjectKeyIdentifier            = hash
+authorityKeyIdentifier          = keyid,issuer:always
+
+# Default extensions to be added to certificates when the 'req'
+# command is invoked
+[ v3_req ]
+basicConstraints                = CA:FALSE
+subjectKeyIdentifier            = hash
+keyUsage                        = nonRepudiation, digitalSignature, keyEncipherment
+nsCertType                      = server
+
+# Alternate extensions to be added to certificates when the 'req'
+# command is invoked, specifying a client-only certificate for use
+# with Postfix, etc.
+[ v3_req_client ]
+basicConstraints                = CA:FALSE
+subjectKeyIdentifier            = hash
+keyUsage                        = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage                = clientAuth
+nsCertType                      = client
+
+# These extensions are added when 'ca' signs a request
+[ usr_cert_default ]
+subjectKeyIdentifier            = hash
+authorityKeyIdentifier          = keyid,issuer:always
+
+# Extensions used by the CA when revoking certificates
+[ crl_ext ]
+authorityKeyIdentifier          = keyid,issuer:always

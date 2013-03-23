@@ -8,6 +8,7 @@ XML = manual.xml \
 	ch-security-updates.xml \
 	ch-ports-packages.xml \
 	ch-gateway.xml \
+	ch-vpn.xml \
 	ap-license.xml \
 	ap-todo.xml
 

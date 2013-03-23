@@ -1,3 +1,3 @@
-<!ENTITY obsdMajorVer "4">
-<!ENTITY obsdMinorVer "8">
+<!ENTITY obsdMajorVer "5">
+<!ENTITY obsdMinorVer "2">
 <!ENTITY obsdVer "&obsdMajorVer;.&obsdMinorVer;">

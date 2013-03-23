@@ -18,31 +18,22 @@ use constant HOSTNAME => 'midgard';
 # The specific configuration files that we want
 use constant FILES => (
                        '/etc/hostname.vr0',
-                       '/etc/hostname.pppoe0',
                        '/etc/hostname.vr1',
                        '/etc/myname',
                        '/etc/hosts',
-                       '/etc/cvsup-file-ports',
                        '/etc/ntpd.conf',
                        '/etc/pf.conf',
                        '/etc/dhcpd.conf',
                        '/var/named/etc/named.conf',
                        '/etc/fstab',
+                       '/etc/openvpn/openvpn.conf',
+                       '/etc/hostname.tun0',
+                       '/etc/rc.local',
                       );
 
 ### END CONFIGURATION #####################################################
 
 ### BEGIN SANITIZATION FUNCTIONS ##########################################
-
-sub sanitize_etc_hostname_pppoe0 {
-    local $_ = shift;
-
-    # Redact PPPoE username and password
-    s/authname\s+'.+?'/authname 'YOUR_USERNAME'/gom;
-    s/authkey\s+'.+?'/authkey 'YOUR_PASSWORD'/gom;
-
-    return $_;
-}
 
 sub sanitize_etc_hostname_vr1 {
     local $_ = shift;
@@ -206,7 +197,7 @@ foreach(keys %::) {
 my $tar_command = "tar -czf manual_files.tar.gz";
 foreach ( FILES ) { $tar_command .= " $_"; }
 if ( HOSTNAME ) {
-    system("ssh " . HOSTNAME . " sudo $tar_command");
+    system("ssh -t " . HOSTNAME . " sudo $tar_command");
     system("scp " . HOSTNAME . ":manual_files.tar.gz .");
     system("ssh " . HOSTNAME . " rm -f manual_files.tar.gz");
 } else {

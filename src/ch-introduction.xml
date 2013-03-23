@@ -18,7 +18,8 @@
     xlink:href="http://www.pcengines.ch/alix2d3.htm">PC Engines GmbH
     ALIX.2D3</link> system board as an OpenBSD &obsdVer;-based NAT gateway,
     providing a small LAN with a PF NAT/firewall, recursive DNS service,
-    Network Time Protocol synchronization, and more.</para>
+    Network Time Protocol synchronization, remove access via OpenVPN, and
+    more.</para>
 
     <figure xml:id="fig-alix">
       <title>An ALIX as an OpenBSD router</title>
@@ -95,32 +96,38 @@
     installation on the ALIX board's Compact Flash card.  Specifically,
     this is in contrast to a read-only, image-based OpenBSD installation
     such as offered by <link
-    xlink:href="http://www.nmedia.net/flashdist/">flashdist</link> or <link
-    xlink:href="http://www.nmedia.net/flashrd/">flashrd</link>.</para>
+    xlink:href="http://www.nmedia.net/flashrd/">flashrd</link>.  There are
+    some good reasons to use flashrd rather than a traditional OpenBSD
+    install on systems like this:</para>
 
-    <para>In researching this topic, I've found some people have an almost
-    visceral repulsion toward the use of read-write filesystems on CF cards
-    in embedded devices.  While such hesitation tends to be based on the
-    kernel of truth that flash memory can endure a limited number of write
-    cycles, I would point out that modern flash memory can handle hundreds
-    of thousands or millions of erasures of the same block before failure,
-    and that's before taking write leveling into account.  If you take some
-    basic precautions such as disabling swap and setting
-    <code>noatime</code> in <filename>fstab</filename>, flash write wear
-    just isn't something you'll have to worry about in practice on such a
-    device.<footnote><para>I should point out I'm not dissing flashrd here
-    – it's a great project, and something like flashrd will be well worth
-    it if you need maximum unattended reliability (for the sake of random
-    filesystem corruption in the face of power failure as much as flash
-    wear), or if you're deploying multiple systems and would find yourself
-    creating system images anyway.  But I feel that for a single hobbyist
-    home router such as the one described in this document, the simplicity
-    and flexibility of a stock OpenBSD installation is the overriding
-    concern.</para></footnote></para>
+    <itemizedlist>
+      <listitem>
+	<para>flashrd allows you to prepare an OpenBSD image on a PC and
+	then dd it onto a flash card for the router, bypassing the
+	complexity of installation by PXE boot.</para>
+      </listitem>
+      <listitem>
+	<para>flashrd's file-based update mechanism makes remote system
+	updates easy and safe.</para>
+      </listitem>
+      <listitem>
+	<para>A flashrd-based system will generally run with the root
+	filesystem mounted read-only, making the system more resilient
+	against unexpected shutdowns.</para>
+      </listitem>
+    </itemizedlist>
 
-    <para>For what it's worth, I've been running this configuration on
-    the same CF card for more than two years now, and I'm yet to encounter
-    flash memory failure.</para>
+    <para>Nevertheless, I prefer a traditional OpenBSD installation for
+    this project: the router sits in my living room, so I don't have to
+    worry about the remote upgrade situation, and it runs on a UPS so power
+    outages are not an issue.</para>
+
+    <para>One concern some people may have is the risk of extended flash
+    wear to a CF card mounted in read/write mode.  In practice I have not
+    found this to be an issue; for what it's worth, I've been running this
+    router on the same CF card for about four years now with no flash
+    failure.  Besides, even with flashrd one cannot avoid
+    <emphasis>all</emphasis> flash writes.</para>
   </section>
 
   <section xml:id="sec-prerequisites">
@@ -131,20 +138,19 @@
 
     <itemizedlist>
       <listitem>
-        <para>A PPPoE-based DSL Internet connection (with DSL modem
-        already set up)
-        </para>
+        <para>A cable Internet connection (with DOCSIS cable modem already
+        set up)</para>
       </listitem>
       <listitem>
         <para>ALIX.2D3 board with power supply and, optionally, enclosure</para>
       </listitem>
       <listitem>
-        <para>16 GB Compact Flash card<footnote><para>While any 4 GB or
+        <para>32 GB Compact Flash card<footnote><para>While any 4 GB or
         larger Compact Flash card should easily suffice (and much smaller
         can be managed, depending on how much effort you are willing to
         expend paring down the OpenBSD operating system, and the exact
         nature of your requirements), the disk partition scheme described
-        in this document assumes the user of 16 GB
+        in this document assumes the use of 32 GB
         media.</para></footnote></para>
       </listitem>
       <listitem>
@@ -155,8 +161,7 @@
       </listitem>
       <listitem>
         <para>A PC workstation with: an RS-232 serial port (or a
-        USB-to-serial adapter), an Ethernet adapter, and a second network
-        adapter of any type which routes to the Internet</para>
+        USB-to-serial adapter) and an ethernet adapter</para>
       </listitem>
     </itemizedlist>
 
@@ -176,8 +181,12 @@
       </listitem>
       <listitem>
         <para>CR2032 battery holder with 20.4mm lead spacing<footnote>
-        <para>For instance, Renata CR2032FH1 or Panasonic BR2032-1HE, as
-        per the ALIX.2D3 documentation.</para></footnote>
+        <para>For instance, <link
+        xlink:href="http://octopart.com/cr2032+mfr+fh1-renata-18985577">Renata
+        CR2032FH1</link> or <link
+        xlink:href="http://octopart.com/br2032-1he-panasonic-155416">Panasonic
+        BR2032-1HE</link>, as per the ALIX.2D3
+        documentation.</para></footnote>
         </para>
       </listitem>
     </itemizedlist>
